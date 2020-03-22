@@ -8,7 +8,7 @@ class InputNumber extends React.Component{
 
     render(){
         var inputElementToRender;
-        var descriptionToLabel = this.props.description ? (this.props.description +": ") : this.props.name+": ";
+        var descriptionToLabel = this.props.description ? this.props.description : this.props.name;
         if(this.props.isCurrency){
             //input styled as currency
             inputElementToRender = 

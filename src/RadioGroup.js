@@ -1,14 +1,11 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 function RadioGroup(props){
-
-
 
     var radiosAndLabels = props.radioGroupData.items.map((item, index) => {
         var elementID = props.radioGroupData.groupName +"-" + item.value;
         return (
-            <div className={props.radioGroupData.groupName +"-" + item.value + "-container"}>            
+            <div className={props.radioGroupData.groupName + "-container"}>            
                 <input 
                     type="radio" 
                     id={elementID}
@@ -21,7 +18,6 @@ function RadioGroup(props){
             </div>
         );
     });
-    console.log(radiosAndLabels);
 
     return (
     <div className={props.className}>
