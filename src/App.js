@@ -1,7 +1,8 @@
 import React from 'react';
-import './App.css';
+import './App.scss';
 import InputNumber from './InputNumber';
 import RadioGroup from './RadioGroup';
+import DataEntrySection from './DataEntrySection';
 import CONSTANTS from './constants';
 
 
@@ -209,61 +210,83 @@ class App extends React.Component {
 
   render(){    
     
+    var filingStatusSectionContent = <RadioGroup id="filing-status-main-container" radioGroupData={filingStatusRadioData} currentValue={this.state.filingStatus} handleChange={this.changeFilingStatus} />;
+    var deductionModeSectionContent = (
+      <div>
+        <RadioGroup id="deduction-mode-main-container" radioGroupData={deductionModeRadioData} currentValue={this.state.deductionMode} handleChange={this.changeDeductionMode} />
+          { //Render only if itemized deduction is selected
+            this.state.deductionMode === CONSTANTS.DEDUCTION_MODE.ITEMIZED &&
+            <InputNumber id="itemized-deduction-container" name="input-itemized-deduction" description="Itemized deduction value: " inputId="input-itemized-deduction" onChange={this.changeItemizedDeduction} value={this.state.itemizedDeductionValue} isCurrency={true}/>  
+          }
+      </div>
+    );
+    var dedepndantsSectionContent = (
+      <div>
+        <RadioGroup id="dependants-claim-status-main-container"  radioGroupData={dependantsClaimStatusRadioData} currentValue={this.state.dependantsClaimStatus} handleChange={this.changeDependantsClaimStatus} />
+          {//Render only if dependants claim status is yes
+            this.state.dependantsClaimStatus === CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES &&
+            <div className="dependants-number-main-container">
+              <InputNumber id="dependants-number-children-container" name="input-dependants-number-children" description="Number of qualifying children: " inputId="input-dependants-number-children" onChange={this.changeNumberOfDependantChildren} value={this.state.numberOfDependantChildren}  maxValue={10}/>  
+              <InputNumber id="dependants-number-relatives-container" name="input-dependants-number-relatives" description="Number of qualifying relatives: " inputId="input-dependants-number-relatives" onChange={this.changeNumberOfDependantRelatives} value={this.state.numberOfDependantRelatives}  maxValue={10}/>  
+            </div>
+          }
+      </div>
+    );
+    var w2SectionContent = (
+      <div>
+        <div id="w2-your-info"> YOUR W-2
+          <InputNumber id="wages-container" name="input-wages" description="Wages, tips and compensation: " inputId="input-wages" onChange={this.changeWages} value={this.state.wages} isCurrency={true}/>  
+          <InputNumber id="tax-withhold-container" name="input-tax-withhold" description="Federal tax withhold: " inputId="input-tax-withhold" onChange={this.changeTaxWithhold} value={this.state.taxWithhold} isCurrency={true}/>  
+        </div>
+          {
+            //Render only if married filing jointlty
+            this.state.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY &&
+            <div className="w2-spouse-info"> SPOUSE W-2
+              <InputNumber id="wages-spuse-container" name="input-wages-spouse" description="Wages, tips and compensation: " inputId="input-wages-spouse" onChange={this.changeWagesSpouse} value={this.state.wagesSpouse} isCurrency={true}/>  
+              <InputNumber id="tax-withhold-spouse-container" name="input-tax-withhold-spouse" description="Federal tax withhold: " inputId="input-tax-withhold-spouse" onChange={this.changeTaxWithholdSpouse} value={this.state.taxWithholdSpouse} isCurrency={true}/>  
+            </div>                
+          }              
+      </div>
+    );
+
+    var otherDeductionsSectionContent = (
+      <div>
+        <RadioGroup id="other-deductions-status-main-container" radioGroupData={otherDeductionsStatusRadioData} currentValue={this.state.otherDeductionsStatus} handleChange={this.changeOtherDeductionsStatus} />
+          {//Render only if other deduction are selected
+          this.state.otherDeductionsStatus === CONSTANTS.OTHER_DEDUCTIONS_STATUS.YES &&
+          <div id="other-deductions-main-container">
+          Enter other deductions:
+            <InputNumber id="pre-tax-deductions-container" name="input-pre-tax-deductions" description="Other pre-tax deductions: " inputId="input-pre-tax-deductions" onChange={this.changePreTaxDeductions} value={this.state.preTaxDeductions} isCurrency={true}/>  
+            <InputNumber id="post-tax-deductions-container" name="input-post-tax-deductions" description="Other post-tax deductions: " inputId="input-post-tax-deductions" onChange={this.changePostTaxDeductions} value={this.state.postTaxDeductions} isCurrency={true}/>  
+          </div>
+        }  
+      </div>
+    );
+
     return (
       <div className="App">
         <header className="App-header">
           TAX ESTIMATOR
         </header>
         <main>
-          <div className="main-container">
+          <div id="main-container">
             {              
               //TO-DO            
-              //Add SASS to the project
-              //Make a mock-up of UI in Figma software
+              //Style UI
               //Create a display summary
               //Create logic to calculate balance
 
             }
-            <RadioGroup className="filing-status-main-container" radioGroupData={filingStatusRadioData} currentValue={this.state.filingStatus} handleChange={this.changeFilingStatus} />
-            <RadioGroup className="deduction-mode-main-container" radioGroupData={deductionModeRadioData} currentValue={this.state.deductionMode} handleChange={this.changeDeductionMode} />
-            { //Render only if itemized deduction is selected
-              this.state.deductionMode === CONSTANTS.DEDUCTION_MODE.ITEMIZED &&
-              <InputNumber className="itemized-deduction-container" name="input-itemized-deduction" description="Itemized deduction value: " inputId="input-itemized-deduction" onChange={this.changeItemizedDeduction} value={this.state.itemizedDeductionValue} isCurrency={true}/>  
-            }   
-            <RadioGroup className="dependants-claim-status-main-container" radioGroupData={dependantsClaimStatusRadioData} currentValue={this.state.dependantsClaimStatus} handleChange={this.changeDependantsClaimStatus} />
-            {//Render only if dependants claim status is yes
-              this.state.dependantsClaimStatus === CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES &&
-              <div className="dependants-number-main-container">
-                <InputNumber className="dependants-number-children-container" name="input-dependants-number-children" description="Number of qualifying children: " inputId="input-dependants-number-children" onChange={this.changeNumberOfDependantChildren} value={this.state.numberOfDependantChildren}  maxValue={10}/>  
-                <InputNumber className="dependants-number-relatives-container" name="input-dependants-number-relatives" description="Number of qualifying relatives: " inputId="input-dependants-number-relatives" onChange={this.changeNumberOfDependantRelatives} value={this.state.numberOfDependantRelatives}  maxValue={10}/>  
-              </div>
-            }
+
+            <DataEntrySection sectionName="FILING STATUS" sectionContent={filingStatusSectionContent} />
+            <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={deductionModeSectionContent} />
+            <DataEntrySection sectionName="DEPENDANTS" sectionContent={dedepndantsSectionContent} />            
+            <DataEntrySection sectionName="W2 INFO" sectionContent={w2SectionContent} />            
+            <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={otherDeductionsSectionContent} />
+            
 
             
-            <div className="w2-container">W2 INFO
-              <div className="w2-your-info"> YOUR W-2
-                <InputNumber className="wages-container" name="input-wages" description="Wages, tips and compensation: " inputId="input-wages" onChange={this.changeWages} value={this.state.wages} isCurrency={true}/>  
-                <InputNumber className="tax-withhold-container" name="input-tax-withhold" description="Federal tax withhold: " inputId="input-tax-withhold" onChange={this.changeTaxWithhold} value={this.state.taxWithhold} isCurrency={true}/>  
-              </div>
-              {
-                //Render only if married filing jointlty
-                this.state.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY &&
-                  <div className="w2-spouse-info"> SPOUSE W-2
-                    <InputNumber className="wages-spuse-container" name="input-wages-spouse" description="Wages, tips and compensation: " inputId="input-wages-spouse" onChange={this.changeWagesSpouse} value={this.state.wagesSpouse} isCurrency={true}/>  
-                    <InputNumber className="tax-withhold-spouse-container" name="input-tax-withhold-spouse" description="Federal tax withhold: " inputId="input-tax-withhold-spouse" onChange={this.changeTaxWithholdSpouse} value={this.state.taxWithholdSpouse} isCurrency={true}/>  
-                  </div>                
-              }              
-            </div>
-            <RadioGroup className="other-deductions-status-main-container" radioGroupData={otherDeductionsStatusRadioData} currentValue={this.state.otherDeductionsStatus} handleChange={this.changeOtherDeductionsStatus} />
-            {//Render only if other deduction are selected
-              this.state.otherDeductionsStatus === CONSTANTS.OTHER_DEDUCTIONS_STATUS.YES &&
-              <div className="other-deductions-main-container">
-                OTHER DEDUCTIONS:
-                <InputNumber className="pre-tax-deductions-container" name="input-pre-tax-deductions" description="Other pre-tax deductions: " inputId="input-pre-tax-deductions" onChange={this.changePreTaxDeductions} value={this.state.preTaxDeductions} isCurrency={true}/>  
-                <InputNumber className="post-tax-deductions-container" name="input-post-tax-deductions" description="Other post-tax deductions: " inputId="input-post-tax-deductions" onChange={this.changePostTaxDeductions} value={this.state.postTaxDeductions} isCurrency={true}/>  
-              </div>
-            }  
-            <div className="summary-container">
+            <div id="summary-container">
               SUMMARY PLACEHOLDER
 
             </div>  

@@ -45,7 +45,7 @@ class InputNumber extends React.Component{
         }
 
         return (
-            <div>
+            <div id={this.props.id} className={this.props.className}>
                 <label htmlFor={this.props.name}>{descriptionToLabel}</label>
                 {inputElementToRender}  
             </div>
