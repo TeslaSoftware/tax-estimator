@@ -1,6 +1,4 @@
 import React from 'react';
-import InputNumber from './InputNumber';
-import RadioGroup from './RadioGroup';
 
 function DataEntrySection(props){
     return(
