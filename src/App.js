@@ -113,6 +113,8 @@ class App extends React.Component {
     this.changePreTaxDeductions = this.changePreTaxDeductions.bind(this);
     this.changePostTaxDeductions = this.changePostTaxDeductions.bind(this);
     this.changeOtherDeductionsStatus = this.changeOtherDeductionsStatus.bind(this);
+    
+    
 
   }
 
@@ -208,60 +210,12 @@ class App extends React.Component {
     });
   }
 
-  render(){    
-    
-    var filingStatusSectionContent = <RadioGroup id="filing-status-main-container" radioGroupData={filingStatusRadioData} currentValue={this.state.filingStatus} handleChange={this.changeFilingStatus} />;
-    var deductionModeSectionContent = (
-      <div>
-        <RadioGroup id="deduction-mode-main-container" radioGroupData={deductionModeRadioData} currentValue={this.state.deductionMode} handleChange={this.changeDeductionMode} />
-          { //Render only if itemized deduction is selected
-            this.state.deductionMode === CONSTANTS.DEDUCTION_MODE.ITEMIZED &&
-            <InputNumber id="itemized-deduction-container" name="input-itemized-deduction" description="Itemized deduction value: " inputId="input-itemized-deduction" onChange={this.changeItemizedDeduction} value={this.state.itemizedDeductionValue} isCurrency={true}/>  
-          }
-      </div>
-    );
-    var dedepndantsSectionContent = (
-      <div>
-        <RadioGroup id="dependants-claim-status-main-container"  radioGroupData={dependantsClaimStatusRadioData} currentValue={this.state.dependantsClaimStatus} handleChange={this.changeDependantsClaimStatus} />
-          {//Render only if dependants claim status is yes
-            this.state.dependantsClaimStatus === CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES &&
-            <div className="dependants-number-main-container">
-              <InputNumber id="dependants-number-children-container" name="input-dependants-number-children" description="Number of qualifying children: " inputId="input-dependants-number-children" onChange={this.changeNumberOfDependantChildren} value={this.state.numberOfDependantChildren}  maxValue={10}/>  
-              <InputNumber id="dependants-number-relatives-container" name="input-dependants-number-relatives" description="Number of qualifying relatives: " inputId="input-dependants-number-relatives" onChange={this.changeNumberOfDependantRelatives} value={this.state.numberOfDependantRelatives}  maxValue={10}/>  
-            </div>
-          }
-      </div>
-    );
-    var w2SectionContent = (
-      <div>
-        <div id="w2-your-info"> YOUR W-2
-          <InputNumber id="wages-container" name="input-wages" description="Wages, tips and compensation: " inputId="input-wages" onChange={this.changeWages} value={this.state.wages} isCurrency={true}/>  
-          <InputNumber id="tax-withhold-container" name="input-tax-withhold" description="Federal tax withhold: " inputId="input-tax-withhold" onChange={this.changeTaxWithhold} value={this.state.taxWithhold} isCurrency={true}/>  
-        </div>
-          {
-            //Render only if married filing jointlty
-            this.state.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY &&
-            <div className="w2-spouse-info"> SPOUSE W-2
-              <InputNumber id="wages-spuse-container" name="input-wages-spouse" description="Wages, tips and compensation: " inputId="input-wages-spouse" onChange={this.changeWagesSpouse} value={this.state.wagesSpouse} isCurrency={true}/>  
-              <InputNumber id="tax-withhold-spouse-container" name="input-tax-withhold-spouse" description="Federal tax withhold: " inputId="input-tax-withhold-spouse" onChange={this.changeTaxWithholdSpouse} value={this.state.taxWithholdSpouse} isCurrency={true}/>  
-            </div>                
-          }              
-      </div>
-    );
+  
 
-    var otherDeductionsSectionContent = (
-      <div>
-        <RadioGroup id="other-deductions-status-main-container" radioGroupData={otherDeductionsStatusRadioData} currentValue={this.state.otherDeductionsStatus} handleChange={this.changeOtherDeductionsStatus} />
-          {//Render only if other deduction are selected
-          this.state.otherDeductionsStatus === CONSTANTS.OTHER_DEDUCTIONS_STATUS.YES &&
-          <div id="other-deductions-main-container">
-          Enter other deductions:
-            <InputNumber id="pre-tax-deductions-container" name="input-pre-tax-deductions" description="Other pre-tax deductions: " inputId="input-pre-tax-deductions" onChange={this.changePreTaxDeductions} value={this.state.preTaxDeductions} isCurrency={true}/>  
-            <InputNumber id="post-tax-deductions-container" name="input-post-tax-deductions" description="Other post-tax deductions: " inputId="input-post-tax-deductions" onChange={this.changePostTaxDeductions} value={this.state.postTaxDeductions} isCurrency={true}/>  
-          </div>
-        }  
-      </div>
-    );
+
+
+  render(){    
+    //here you can add logic
 
     return (
       <div className="App">
@@ -275,14 +229,16 @@ class App extends React.Component {
               //Style UI
               //Create a display summary
               //Create logic to calculate balance
+              //Change UI to display step by step one section at a time. Also show progress in squares with numbers- highlight current section number
+              //use state variable to keep track on which screen you are and render only that section
 
             }
 
-            <DataEntrySection sectionName="FILING STATUS" sectionContent={filingStatusSectionContent} />
-            <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={deductionModeSectionContent} />
-            <DataEntrySection sectionName="DEPENDANTS" sectionContent={dedepndantsSectionContent} />            
-            <DataEntrySection sectionName="W2 INFO" sectionContent={w2SectionContent} />            
-            <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={otherDeductionsSectionContent} />
+            <DataEntrySection sectionName="FILING STATUS" sectionContent={this.generateFilingStatusSectionContent()} />
+            <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={this.generateDeductionModeSectionContent()} />
+            <DataEntrySection sectionName="DEPENDANTS" sectionContent={this.generateDedepndantsSectionContent()} />            
+            <DataEntrySection sectionName="W2 INFO" sectionContent={this.generateW2SEctionContent()} />            
+            <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={this.generateOtherDeductionsSectionContent()} />
             
 
             
@@ -302,6 +258,75 @@ class App extends React.Component {
       </div>
     );
   }
+
+  generateFilingStatusSectionContent(){
+    return(
+      <RadioGroup id="filing-status-main-container" radioGroupData={filingStatusRadioData} currentValue={this.state.filingStatus} handleChange={this.changeFilingStatus} />
+    );
+  }
+
+  generateDeductionModeSectionContent(){
+    return(
+      <div>
+        <RadioGroup id="deduction-mode-main-container" radioGroupData={deductionModeRadioData} currentValue={this.state.deductionMode} handleChange={this.changeDeductionMode} />
+          { //Render only if itemized deduction is selected
+            this.state.deductionMode === CONSTANTS.DEDUCTION_MODE.ITEMIZED &&
+            <InputNumber id="itemized-deduction-container" name="input-itemized-deduction" description="Itemized deduction value: " inputId="input-itemized-deduction" onChange={this.changeItemizedDeduction} value={this.state.itemizedDeductionValue} isCurrency={true}/>  
+          }
+      </div>
+    );
+  }
+  
+  generateDedepndantsSectionContent(){
+    return(
+      <div>
+        <RadioGroup id="dependants-claim-status-main-container"  radioGroupData={dependantsClaimStatusRadioData} currentValue={this.state.dependantsClaimStatus} handleChange={this.changeDependantsClaimStatus} />
+          {//Render only if dependants claim status is yes
+            this.state.dependantsClaimStatus === CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES &&
+            <div className="dependants-number-main-container">
+              <InputNumber id="dependants-number-children-container" name="input-dependants-number-children" description="Number of qualifying children: " inputId="input-dependants-number-children" onChange={this.changeNumberOfDependantChildren} value={this.state.numberOfDependantChildren}  maxValue={10}/>  
+              <InputNumber id="dependants-number-relatives-container" name="input-dependants-number-relatives" description="Number of qualifying relatives: " inputId="input-dependants-number-relatives" onChange={this.changeNumberOfDependantRelatives} value={this.state.numberOfDependantRelatives}  maxValue={10}/>  
+            </div>
+          }
+      </div>
+    );
+  }
+
+  generateW2SEctionContent(){
+    return(
+      <div>
+        <div id="w2-your-info"> YOUR W-2
+          <InputNumber id="wages-container" name="input-wages" description="Wages, tips and compensation: " inputId="input-wages" onChange={this.changeWages} value={this.state.wages} isCurrency={true}/>  
+          <InputNumber id="tax-withhold-container" name="input-tax-withhold" description="Federal tax withhold: " inputId="input-tax-withhold" onChange={this.changeTaxWithhold} value={this.state.taxWithhold} isCurrency={true}/>  
+        </div>
+          {
+            //Render only if married filing jointlty
+            this.state.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY &&
+            <div className="w2-spouse-info"> SPOUSE W-2
+              <InputNumber id="wages-spuse-container" name="input-wages-spouse" description="Wages, tips and compensation: " inputId="input-wages-spouse" onChange={this.changeWagesSpouse} value={this.state.wagesSpouse} isCurrency={true}/>  
+              <InputNumber id="tax-withhold-spouse-container" name="input-tax-withhold-spouse" description="Federal tax withhold: " inputId="input-tax-withhold-spouse" onChange={this.changeTaxWithholdSpouse} value={this.state.taxWithholdSpouse} isCurrency={true}/>  
+            </div>                
+          }              
+      </div>
+    );
+  }
+
+  generateOtherDeductionsSectionContent(){
+    return(
+      <div>
+        <RadioGroup id="other-deductions-status-main-container" radioGroupData={otherDeductionsStatusRadioData} currentValue={this.state.otherDeductionsStatus} handleChange={this.changeOtherDeductionsStatus} />
+          {//Render only if other deduction are selected
+          this.state.otherDeductionsStatus === CONSTANTS.OTHER_DEDUCTIONS_STATUS.YES &&
+          <div id="other-deductions-main-container">
+          Enter other deductions:
+            <InputNumber id="pre-tax-deductions-container" name="input-pre-tax-deductions" description="Other pre-tax deductions: " inputId="input-pre-tax-deductions" onChange={this.changePreTaxDeductions} value={this.state.preTaxDeductions} isCurrency={true}/>  
+            <InputNumber id="post-tax-deductions-container" name="input-post-tax-deductions" description="Other post-tax deductions: " inputId="input-post-tax-deductions" onChange={this.changePostTaxDeductions} value={this.state.postTaxDeductions} isCurrency={true}/>  
+          </div>
+        }  
+      </div>
+    );
+  }
+
 }
 
 

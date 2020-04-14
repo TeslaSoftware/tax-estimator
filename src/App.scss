@@ -58,7 +58,6 @@ main{
 
 .data-entry-section{
   margin: 1rem;
-  border: 0.05rem solid $primary-dark-color;
   overflow: hidden;
   border-radius: 0.3rem;
   box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.2);
@@ -67,7 +66,7 @@ main{
 
 
 .data-entry-section-header{
-  background-color: $primary-color;
+  background: linear-gradient(to right, $primary-color, $primary-dark-color, $primary-color);
   color: $on-primary-color;
   padding: 0.1rem;
 }
