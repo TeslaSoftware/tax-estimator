@@ -266,7 +266,7 @@ class App extends React.Component {
     return (
       <div className="App">
         <header className="App-header">
-          TAX ESTIMATOR
+          TAX ESTIMATOR 2020
         </header>
         <main>
           <div id="main-container">
