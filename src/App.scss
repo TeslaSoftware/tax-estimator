@@ -1,6 +1,23 @@
 /*
 https://material.io/resources/color/#!/?view.left=0&view.right=0&secondary.color=9CCC65&primary.color=0D47A1
 */
+@keyframes ripple-pressed {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  10% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  95% { 
+    opacity: 0;
+    transform: scale(2);
+  }
+  100% { 
+    transform: scale(1);
+  }
+}
 
 $primary-color: #0d47a1;
 $primary-light-color: #5472d3;
@@ -14,13 +31,14 @@ $secondary-light-color: #cfff95;
 $secondary-dark-color: #6b9b37;
 $on-secondary-color: #000000;
 $on-secondary-light-color: #000000;
-$on-secondary-dark-color: #000000;
+$on-secondary-dark-color: #FFFFFF;
 
 $error-color:#B00020;
 $on-error-color: #FFFFFF;
 
 body{
   background-color: #e3f2fd;
+  font-family: 'Montserrat', sans-serif;
 }
 
 .App {
@@ -43,8 +61,14 @@ body{
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: 2rem;
+  font-family: 'Roboto', sans-serif;
+
   color: $on-primary-color;
+  font-weight: 500;
+  border-bottom: 0.3rem solid $primary-light-color;
+  box-shadow: 0px 3px 2px 0px rgba(0, 0, 0, 0.2), 0px 0 6px 0px rgba(0, 0, 0, 0.15);
+  padding: 0.1rem;
 }
 
 main{
@@ -60,18 +84,19 @@ main{
   margin: 1rem;
   overflow: hidden;
   border-radius: 0.3rem;
-  box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.2);
+  box-shadow: 2px 2px 6px 1px rgba(0, 0, 0, 0.2), 0px 0px 6px 3px rgba(0, 0, 0, 0.12);
   background-color: $on-primary-color;
 }
 
 
 .data-entry-section-header{
-  background: linear-gradient(to right, $primary-color, $primary-dark-color, $primary-color);
+  background: linear-gradient(to right, $primary-light-color , $primary-color 20%,  $primary-color 80%, $primary-light-color );
   color: $on-primary-color;
   padding: 0.1rem;
 }
 
 .data-entry-section-content{
+  font-family: 'Roboto', sans-serif;
   margin: 0.5rem;
   color: $primary-dark-color;
   input{
@@ -82,6 +107,106 @@ main{
 .radio-group-item{
   display: inline-block;
   margin: 0 1rem;
+  position: relative;
+  line-height: 1rem;
+}
+
+input[type=radio] { 
+  opacity: 0;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1rem;
+  height: 1rem;
+  z-index: 2;
+}
+
+.radio-look {  
+  width: 0.5rem;
+  height: 0.5rem;
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0.5rem;
+  border: 1px solid $primary-dark-color;
+  border-radius: 100%;
+  position: relative;
+  margin-right: 0.3rem;
+  box-sizing: border-box;
 }
 
 
+.radio-look:before {
+  content: "";
+  position: absolute;
+  border: 1px  solid $primary-color;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background-color: $primary-light-color ; 
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(0.5)
+}
+
+/*used for ripple effect*/
+.radio-look:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  border-radius: 100%;
+  background-color: $primary-light-color ; 
+  opacity: 0;
+}
+
+/*
+input[type=radio]:checked + .radio-look:after {
+  content: "\2713";
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  color:white;
+  position: absolute;
+  font-size: 0.9rem;
+}
+*/
+
+
+
+input[type=radio]:checked {
+  + .radio-look:before{
+    opacity: 1;
+  }
+  + .radio-look{
+    border-color: $primary-light-color;
+  }  
+}
+
+
+input[type=radio]:focus + .radio-look:after{
+  animation: ripple-pressed .5s ease-out;
+}
+input[type=radio]:checked:focus + .radio-look:after{
+  animation: ripple-pressed .5s ease-out backwards;
+}
+
+/*need to disable it for mobile because it is misbehaving*/
+input[type=radio]:hover{
+  + .radio-look:after{
+    opacity: 0.1;    
+    transform: scale(2);
+    transition: 0.5s ease-in;
+  }
+  &:not(:checked) + .radio-look:after{
+    background-color: $primary-dark-color ; 
+  }
+  &:checked + .radio-look:after{
+    background-color: $primary-light-color ; 
+  }
+}
+
+/*the conflict between hover and focused could be better handled with events listeners*/

@@ -230,10 +230,12 @@ class App extends React.Component {
               //Create a display summary
               //Create logic to calculate balance
               //Change UI to display step by step one section at a time. Also show progress in squares with numbers- highlight current section number
-              //use state variable to keep track on which screen you are and render only that section
+              //use state variable to keep track on which screen you are and render only that section.You can add all section to an array and display only current index section.
 
             }
 
+
+          
             <DataEntrySection sectionName="FILING STATUS" sectionContent={this.generateFilingStatusSectionContent()} />
             <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={this.generateDeductionModeSectionContent()} />
             <DataEntrySection sectionName="DEPENDANTS" sectionContent={this.generateDedepndantsSectionContent()} />            

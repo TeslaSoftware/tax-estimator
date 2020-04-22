@@ -5,7 +5,8 @@ function RadioGroup(props){
     var radiosAndLabels = props.radioGroupData.items.map((item, index) => {
         var elementID = props.radioGroupData.groupName +"-" + item.value;
         return (
-            <div key={index} className={props.radioGroupData.groupName + "-container radio-group-item"}>            
+            <div key={index} className={props.radioGroupData.groupName + "-container radio-group-item"}>     
+              <label htmlFor={elementID}>       
                 <input 
                     type="radio" 
                     id={elementID}
@@ -14,7 +15,8 @@ function RadioGroup(props){
                     onChange={props.handleChange}
                     value={item.value}
                 />
-                <label htmlFor={elementID}>{item.description}</label>
+                <span className="radio-look"></span>
+              {item.description}</label>
             </div>
         );
     });
