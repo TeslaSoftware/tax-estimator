@@ -5,10 +5,11 @@ import RadioGroup from './RadioGroup';
 import DataEntrySection from './DataEntrySection';
 import CONSTANTS from './constants';
 import * as utils from './utils';
+import taxModel2019 from './taxModel2019';
 
 var deductionModeRadioData = {
   groupName: "deduction-mode",
-  description: "Select your deduction mode:",
+  description: "Which deduction mode you want to use?",
   items: [
     {
       value: CONSTANTS.DEDUCTION_MODE.STANDARD,
@@ -24,7 +25,7 @@ var deductionModeRadioData = {
 
 var filingStatusRadioData = {
   groupName: "filing-status",
-  description: "Select filing status:",
+  description: "What is your filing status?",
   items: [
     {
       value: CONSTANTS.FILING_STATUS_VALUE.SINGLE,
@@ -51,7 +52,7 @@ var filingStatusRadioData = {
 
 var dependantsClaimStatusRadioData = {
   groupName: "dependants-claim-status",
-  description: "Do you have depenedants to claim:",
+  description: "Do you have depenedants to claim?",
   items: [
     {
       value: CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES,
@@ -66,7 +67,7 @@ var dependantsClaimStatusRadioData = {
 
 var otherDeductionsStatusRadioData = {
   groupName: "other-deductions-status",
-  description: "Do you have any other deductions:",
+  description: "Do you have any other deductions/tax credits?",
   items: [
     {
       value: CONSTANTS.OTHER_DEDUCTIONS_STATUS.YES,
@@ -84,8 +85,8 @@ class App extends React.Component {
   constructor(props){
     super(props);
     this.state ={
-      filingStatus:"single",
-      deductionMode: "standard",
+      filingStatus: CONSTANTS.FILING_STATUS_VALUE.SINGLE,
+      deductionMode: CONSTANTS.DEDUCTION_MODE.STANDARD,
       //Need to use input value as String instead of number. This is because of React bug 9402->https://github.com/facebook/react/issues/9402
       numberOfDependantChildren: "0",       
       numberOfDependantRelatives: "0",  
@@ -96,7 +97,7 @@ class App extends React.Component {
       taxWithholdSpouse: "$0",
       dependantsClaimStatus: CONSTANTS.DEPENDANTS_CLAIM_STATUS.NO,
       preTaxDeductions: "$0",
-      postTaxDeductions: "$0",
+      taxCreditsDeductions: "$0",
       otherDeductionsStatus: CONSTANTS.OTHER_DEDUCTIONS_STATUS.NO,
 
     }
@@ -111,11 +112,11 @@ class App extends React.Component {
     this.changeWagesSpouse = this.changeWagesSpouse.bind(this);
     this.changeTaxWithholdSpouse = this.changeTaxWithholdSpouse.bind(this);
     this.changePreTaxDeductions = this.changePreTaxDeductions.bind(this);
-    this.changePostTaxDeductions = this.changePostTaxDeductions.bind(this);
+    this.changeTaxCreditsDeductions = this.changeTaxCreditsDeductions.bind(this);
     this.changeOtherDeductionsStatus = this.changeOtherDeductionsStatus.bind(this);
+    this.calculateTaxes = this.calculateTaxes.bind(this);
     
-    
-
+    this.taxModel = new taxModel2019(this.state);
   }
 
   changeFilingStatus(event){
@@ -203,10 +204,10 @@ class App extends React.Component {
     });
   }
 
-  changePostTaxDeductions(event){
+  changeTaxCreditsDeductions(event){
     var formattedValue = utils.convertToCurrency(event, true)
     this.setState({
-      postTaxDeductions: formattedValue
+      taxCreditsDeductions: formattedValue
     });
   }
 
@@ -216,6 +217,7 @@ class App extends React.Component {
 
   render(){    
     //here you can add logic
+
 
     return (
       <div className="App">
@@ -241,8 +243,10 @@ class App extends React.Component {
             <DataEntrySection sectionName="DEPENDANTS" sectionContent={this.generateDedepndantsSectionContent()} />            
             <DataEntrySection sectionName="W2 INFO" sectionContent={this.generateW2SEctionContent()} />            
             <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={this.generateOtherDeductionsSectionContent()} />
+            <div id="controls-container">
+              <button onClick={this.calculateTaxes}>CALCULATE</button>
+            </div>
             
-
             
             <div id="summary-container">
               SUMMARY PLACEHOLDER
@@ -260,6 +264,16 @@ class App extends React.Component {
       </div>
     );
   }
+
+  calculateTaxes(){
+    console.log("calculating taxes");
+    //update taxModel and recalculate
+    if(!this.taxModel.eqals(this.state)){      
+      this.taxModel.updateState(this.state);
+    }
+    this.taxModel.recalculate();
+  }
+
 
   generateFilingStatusSectionContent(){
     return(
@@ -296,16 +310,16 @@ class App extends React.Component {
 
   generateW2SEctionContent(){
     return(
-      <div>
-        <div id="w2-your-info"> YOUR W-2
+      <div id="w2-info-container">
+        <div id="w2-your-info" className="w2-info"> YOUR W-2
           <InputNumber id="wages-container" name="input-wages" description="Wages, tips and compensation: " inputId="input-wages" onChange={this.changeWages} value={this.state.wages} isCurrency={true}/>  
           <InputNumber id="tax-withhold-container" name="input-tax-withhold" description="Federal tax withhold: " inputId="input-tax-withhold" onChange={this.changeTaxWithhold} value={this.state.taxWithhold} isCurrency={true}/>  
         </div>
           {
             //Render only if married filing jointlty
             this.state.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY &&
-            <div className="w2-spouse-info"> SPOUSE W-2
-              <InputNumber id="wages-spuse-container" name="input-wages-spouse" description="Wages, tips and compensation: " inputId="input-wages-spouse" onChange={this.changeWagesSpouse} value={this.state.wagesSpouse} isCurrency={true}/>  
+            <div id="w2-spouse-info" className="w2-info"> SPOUSE W-2
+              <InputNumber id="wages-spouse-container" name="input-wages-spouse" description="Wages, tips and compensation: " inputId="input-wages-spouse" onChange={this.changeWagesSpouse} value={this.state.wagesSpouse} isCurrency={true}/>  
               <InputNumber id="tax-withhold-spouse-container" name="input-tax-withhold-spouse" description="Federal tax withhold: " inputId="input-tax-withhold-spouse" onChange={this.changeTaxWithholdSpouse} value={this.state.taxWithholdSpouse} isCurrency={true}/>  
             </div>                
           }              
@@ -320,14 +334,16 @@ class App extends React.Component {
           {//Render only if other deduction are selected
           this.state.otherDeductionsStatus === CONSTANTS.OTHER_DEDUCTIONS_STATUS.YES &&
           <div id="other-deductions-main-container">
-          Enter other deductions:
+            <div className="container-label">Enter other deductions/tax credits:</div>
             <InputNumber id="pre-tax-deductions-container" name="input-pre-tax-deductions" description="Other pre-tax deductions: " inputId="input-pre-tax-deductions" onChange={this.changePreTaxDeductions} value={this.state.preTaxDeductions} isCurrency={true}/>  
-            <InputNumber id="post-tax-deductions-container" name="input-post-tax-deductions" description="Other post-tax deductions: " inputId="input-post-tax-deductions" onChange={this.changePostTaxDeductions} value={this.state.postTaxDeductions} isCurrency={true}/>  
+            <InputNumber id="tax-credits-deductions-container" name="input-tax-credits-deductions" description="Tax credits: " inputId="input-tax-credits-deductions" onChange={this.changeTaxCreditsDeductions} value={this.state.taxCreditsDeductions} isCurrency={true}/>  
           </div>
         }  
       </div>
     );
   }
+
+
 
 }
 

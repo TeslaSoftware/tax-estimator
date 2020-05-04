@@ -57,3 +57,10 @@ export function convertToValidNumber(event){
     }
     return parseInt(returnValue).toString();
   }
+
+  export function convertStringToNumber(value){
+    if(value === "") return 0;
+    // remove all characters that aren't digit
+    value = value.replace(/[^0-9]/g,'');  
+    return parseFloat(value);
+  }
