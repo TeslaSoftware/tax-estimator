@@ -99,7 +99,7 @@ class App extends React.Component {
       preTaxDeductions: "$0",
       taxCreditsDeductions: "$0",
       otherDeductionsStatus: CONSTANTS.OTHER_DEDUCTIONS_STATUS.NO,
-
+      balance: 0,
     }
     this.changeFilingStatus = this.changeFilingStatus.bind(this);
     this.changeDeductionMode = this.changeDeductionMode.bind(this);
@@ -249,7 +249,7 @@ class App extends React.Component {
             
             
             <div id="summary-container">
-              SUMMARY PLACEHOLDER
+              Your balance is: {this.state.balance}
 
             </div>  
 
@@ -272,6 +272,9 @@ class App extends React.Component {
       this.taxModel.updateState(this.state);
     }
     this.taxModel.recalculate();
+    this.setState({
+      balance : this.taxModel.balance
+    });
   }
 
 

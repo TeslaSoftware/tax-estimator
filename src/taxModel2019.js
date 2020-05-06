@@ -110,13 +110,24 @@ class taxModel2019{
         this.calcualteTaxesDue();
 
         //calculate tax credit for dependants + other tax credits
-
+        var taxCreditsValue = this.calculateTaxCredits();
+        
         //update taxes due, by subtracting tax credits
+        this.totalTaxesDue -= taxCreditsValue;
+        console.log("Tax due after deducting tax credits: " +this.totalTaxesDue  );
+        //calculate balance
 
-        /*calculate effective tax rate = Taxes Paid / Taxable Income
+        this.balance = this.totalTaxesPaid - this.totalTaxesDue;
+        console.log("Balance is: " + this.balance);
+        /*calculate effective tax rate = Taxes Due (aka total tax) / Taxable Income (income before adjustments)
         An individual's effective tax rate represents the average of all tax brackets that their income passes through 
         as well as the total of all deductions and credits that lower their total income to their taxable income.
         */
+       this.effectiveTaxRate = 0;
+       if(this.totalIncome !== 0){
+        this.effectiveTaxRate = this.totalTaxesDue / this.totalIncome;
+       } 
+       console.log("Effective Tax Rate is : " + this.effectiveTaxRate );
     }
 
     calcualteTaxesDue(){
@@ -138,10 +149,18 @@ class taxModel2019{
             taxesDue += amountToUseForCalculation * taxBracket[key].rate;
             currentAGI -= amountToUseForCalculation;
         }
-        this.taxesDue = taxesDue;
+        this.totalTaxesDue = taxesDue;
         this.taxBracketRate = taxBracketRate;
-        console.log("Taxes due before applying credits: " + this.taxesDue);
+        console.log("Taxes due before applying credits: " + this.totalTaxesDue);
         console.log("Tax bracket rate: " + this.taxBracketRate);
+    }
+
+    calculateTaxCredits(){
+        //calulate tax credits based on dependants
+        var result = dependantsTaxCredit.child * this.numberOfDependantChildren + dependantsTaxCredit.relative * this.numberOfDependantRelatives;
+        result += this.taxCreditsDeductions;
+        console.log("Total tax credits are: " + result);
+        return result;
     }
 
 
