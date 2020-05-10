@@ -99,6 +99,11 @@ class App extends React.Component {
       preTaxDeductions: "$0",
       taxCreditsDeductions: "$0",
       otherDeductionsStatus: CONSTANTS.OTHER_DEDUCTIONS_STATUS.NO,
+      //variables used for results
+      totalIncome: 0,
+      AGI: 0,
+      totalTaxWithheld: 0,
+      totalTaxDue: 0,
       balance: 0,
     }
     this.changeFilingStatus = this.changeFilingStatus.bind(this);
@@ -139,35 +144,35 @@ class App extends React.Component {
 
 
   changeItemizedDeduction(event){
-    var formattedValue = utils.convertToCurrency(event, true)
+    var formattedValue = utils.convertToCurrency(event.target.value, true)
     this.setState({
       itemizedDeductionValue: formattedValue
     });
   }
 
   changeWages(event){
-    var formattedValue = utils.convertToCurrency(event, true)
+    var formattedValue = utils.convertToCurrency(event.target.value, true)
     this.setState({
       wages: formattedValue
     });
   }
 
   changeTaxWithhold(event){
-    var formattedValue = utils.convertToCurrency(event, true)
+    var formattedValue = utils.convertToCurrency(event.target.value, true)
     this.setState({
       taxWithhold: formattedValue
     });
   }
 
   changeWagesSpouse(event){
-    var formattedValue = utils.convertToCurrency(event, true)
+    var formattedValue = utils.convertToCurrency(event.target.value, true)
     this.setState({
       wagesSpouse: formattedValue
     });
   }
 
   changeTaxWithholdSpouse(event){
-    var formattedValue = utils.convertToCurrency(event, true)
+    var formattedValue = utils.convertToCurrency(event.target.value, true)
     this.setState({
       taxWithholdSpouse: formattedValue
     });
@@ -198,14 +203,14 @@ class App extends React.Component {
   }
 
   changePreTaxDeductions(event){
-    var formattedValue = utils.convertToCurrency(event, true)
+    var formattedValue = utils.convertToCurrency(event.target.value, true)
     this.setState({
       preTaxDeductions: formattedValue
     });
   }
 
   changeTaxCreditsDeductions(event){
-    var formattedValue = utils.convertToCurrency(event, true)
+    var formattedValue = utils.convertToCurrency(event.target.value, true)
     this.setState({
       taxCreditsDeductions: formattedValue
     });
@@ -217,7 +222,16 @@ class App extends React.Component {
 
   render(){    
     //here you can add logic
-
+    var resultMessage = ""
+    if(this.state.balance > 0){
+      resultMessage =  `CONGRATULATIONS! Your estimated refund is: ${utils.convertToCurrency(this.state.balance)}`;
+    }
+    else if(this.state.balance < 0){
+      resultMessage = `Looks like you will owe ${utils.convertToCurrency(this.state.balance)} in taxes.`;
+    }
+    else{
+      resultMessage = "Looks like you will be all square! Nothing to pay, but no refund either...";
+    } 
 
     return (
       <div className="App">
@@ -227,13 +241,12 @@ class App extends React.Component {
         <main>
           <div id="main-container">
             {              
-              //TO-DO            
-              //Style UI
+              //TO-DO     
               //Create a display summary
-              //Create logic to calculate balance
+              //Add graph
               //Change UI to display step by step one section at a time. Also show progress in squares with numbers- highlight current section number
               //use state variable to keep track on which screen you are and render only that section.You can add all section to an array and display only current index section.
-
+              //develop unit tests
             }
 
 
@@ -248,9 +261,34 @@ class App extends React.Component {
             </div>
             
             
-            <div id="summary-container">
-              Your balance is: {this.state.balance}
-
+            <div id="results-container">
+              <div id="results-container-header">RESULTS</div>
+              <div id="results-container-content">
+                <div className="results-row results-message">
+                  {resultMessage}
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your total wages:</div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalIncome, true)}</div>                 
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your adjusted gross income:</div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.AGI, true)}</div>                 
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your total taxes withheld:</div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxWithheld, true)}</div>                 
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your total taxes due: </div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxDue, true)}</div>                 
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your balance is: </div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.balance, true)}</div>                 
+                </div>
+              </div>
+                      
             </div>  
 
             
@@ -273,7 +311,11 @@ class App extends React.Component {
     }
     this.taxModel.recalculate();
     this.setState({
-      balance : this.taxModel.balance
+      balance : this.taxModel.balance,
+      totalIncome: this.taxModel.totalIncome,
+      AGI: this.taxModel.totalTaxableIncome,
+      totalTaxWithheld: this.taxModel.totalTaxesWithheld,
+      totalTaxDue: this.taxModel.totalTaxDue,
     });
   }
 

@@ -88,7 +88,7 @@ main{
   
 }
 
-.data-entry-section{
+.data-entry-section, #results-container{
   margin: 1rem;
   overflow: hidden;
   border-radius: 0.3rem;
@@ -110,6 +110,39 @@ main{
   input{
     color: $primary-dark-color;
   }
+}
+
+#results-container-header{
+  background: linear-gradient(to right, $secondary-light-color , $secondary-color 20%,  $secondary-color 80%, $secondary-light-color );
+  color: $on-primary-color;
+  padding: 0.5rem;
+}
+
+#results-container-content{
+  font-family: 'Roboto', sans-serif;
+  margin: 1rem;
+  color: $primary-dark-color;
+}
+
+
+.results-message{
+  font-weight: 700;
+}
+
+.results-row{
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+  .results-row-label{
+    width: 50%;
+    text-align: right;
+  }
+  .results-row-value{
+    width: 50%;
+    text-align: left;
+    padding-left: 1rem;;
+  }
+
 }
 
 .radio-group-item{
@@ -238,29 +271,34 @@ label, input, .radio-group-item, .radio-group-label, .container-label{
   padding: 0.5rem;
 }
 
-#w2-info-container{
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  .w2-info{
-    display: flex;
-    flex-direction: column;
-    padding: 0.5rem;
-  }
-}
-
-#wages-container, #wages-spouse-container, #tax-withhold-container, #tax-withhold-spouse-container{  
-  & input{
-    float: right;
-  }
-  & label{
-    float: left;
-  }
-}
 
 .input-text-number-container, #other-deductions-main-container{
   padding: 0.5rem;
 }
+
+.input-text-number-container{
+  display: flex;
+  align-items: center;
+  label{
+    text-align: right;
+    width: 50%;
+  }
+  input{
+    text-align: left;
+  }
+}
+
+#w2-info-container{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+}
+
+.w2-info{
+  flex: 1;
+}
+
 
 button{
   position: relative;

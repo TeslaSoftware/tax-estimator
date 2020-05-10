@@ -3,8 +3,9 @@
 helper functions
 */
 
-export function convertToCurrency(event, allowNegativeValues){
-    var value = event.target.value.toString();
+export function convertToCurrency(value, allowNegativeValues){
+  //console.log("convertToCurrency() received value " + value);
+    value = value.toString();
     if(value === "" || value === "$") return "$0";
     var isNegativeValue = false;  
   
@@ -13,20 +14,23 @@ export function convertToCurrency(event, allowNegativeValues){
       isNegativeValue = true;
     }
     
+    //remove decimal places (if there are any)
+    //value = value.indexOf('.') > 0 ? value.substring(0, value.indexOf('.')) : value ;
+    value = value.replace(/\..*/,'');
     // remove all characters that aren't digit
     value = value.replace(/[^0-9]/g,'');  
     // replace multiple zeros with a single one
     value = value.replace(/^0+(.*)$/,'0$1');
     // remove leading zero
-    value = value.replace(/^0([^.].*)$/,'$1');
-    //on tax returns we use only full dolalr values and omit cents.
+    value = value.replace(/^0([^.].*)$/,'$1');    
+    //on tax returns we use only full dollar values and omit cents.
     value = formatNumber(value);
   
     //add curency symbol
     value = "$" + value;
     value = isNegativeValue ? "-"+value : value;
   
-    console.log("converted value is: " + value);
+   // console.log("converted value is: " + value);
     return value;
   }
   

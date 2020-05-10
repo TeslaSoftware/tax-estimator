@@ -4,9 +4,10 @@ import taxBrackets from './taxBrackets2019';
 
 var keysForNumericProperties = ['numberOfDependantChildren', 'numberOfDependantRelatives', 
     'itemizedDeductionValue', 'wages', 'taxWithhold', 'wagesSpouse', 'taxWithholdSpouse', 'preTaxDeductions', 'taxCreditsDeductions'];
-
 var keysForStringProperties = ['filingStatus', 'deductionMode', 'dependantsClaimStatus', 'otherDeductionsStatus'];
-var keysForResultProperties = [ 'totalIncome', 'totalTaxableIncome' ,'totalTaxesPaid', 'totalTaxesDue', 
+//keys for valid state properties, that are not used by model
+var keysForExcludedProperties = ['totalIncome', 'AGI', 'totalTaxWithheld', 'totalTaxDue', 'balance']
+var keysForResultProperties = [ 'totalIncome', 'totalTaxableIncome' ,'totalTaxesWithheld', 'totalTaxDue', 
 'balance', 'taxBracketRate', 'effectiveTaxRate'];
 
 //Define standard deductions values for tax year 2019
@@ -20,6 +21,7 @@ standardDeductions[CONSTANTS.FILING_STATUS_VALUE.QUALIFIED_WIDOW] = 24400;
 //Define deduction value for type of dependant
 var dependantsTaxCredit = {};
 dependantsTaxCredit.child = 2000;
+dependantsTaxCredit.childRefundable = 1400;
 dependantsTaxCredit.relative = 500; 
 
 
@@ -50,7 +52,7 @@ class taxModel2019{
             else if(keysForStringProperties.includes(key)){
                 this[key] = value;    
             }
-            else{
+            else if( !keysForExcludedProperties.includes(key)){
                 console.warn("Unexpected property found during parsing the state. Property key is " + key);
             }                 
         }
@@ -81,11 +83,11 @@ class taxModel2019{
         //total wages are considered from both spouses only if they are filing jointly
         if(this.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY){
             this.totalIncome = this.wages + this.wagesSpouse;
-            this.totalTaxesPaid = this.taxWithhold + this.taxWithholdSpouse;
+            this.totalTaxesWithheld = this.taxWithhold + this.taxWithholdSpouse;
         }
         else{
             this.totalIncome = this.wages;
-            this.totalTaxesPaid = this.taxWithhold;
+            this.totalTaxesWithheld = this.taxWithhold;
         }
         console.log("Total Income: " + this.totalIncome);
         
@@ -94,8 +96,11 @@ class taxModel2019{
         if(this.deductionMode === CONSTANTS.DEDUCTION_MODE.STANDARD){
             deductionsValue += standardDeductions[this.filingStatus];
         }
-        else{
+        else if(this.deductionMode === CONSTANTS.DEDUCTION_MODE.ITEMIZED){
             deductionsValue += this.itemizedDeductionValue;
+        }
+        else{
+            console.error("Unsupported deduction mode selcted: " + this.deductionMode);
         }
 
         console.log("Based on deduction mode, current deduction value is " + deductionsValue);
@@ -113,11 +118,12 @@ class taxModel2019{
         var taxCreditsValue = this.calculateTaxCredits();
         
         //update taxes due, by subtracting tax credits
-        this.totalTaxesDue -= taxCreditsValue;
-        console.log("Tax due after deducting tax credits: " +this.totalTaxesDue  );
+        this.totalTaxDue -= taxCreditsValue;
+        console.log("Tax due after deducting tax credits: " +this.totalTaxDue  );
         //calculate balance
 
-        this.balance = this.totalTaxesPaid - this.totalTaxesDue;
+        this.balance = this.calculateBalance();
+        
         console.log("Balance is: " + this.balance);
         /*calculate effective tax rate = Taxes Due (aka total tax) / Taxable Income (income before adjustments)
         An individual's effective tax rate represents the average of all tax brackets that their income passes through 
@@ -125,7 +131,7 @@ class taxModel2019{
         */
        this.effectiveTaxRate = 0;
        if(this.totalIncome !== 0){
-        this.effectiveTaxRate = this.totalTaxesDue / this.totalIncome;
+        this.effectiveTaxRate = this.totalTaxDue / this.totalIncome;
        } 
        console.log("Effective Tax Rate is : " + this.effectiveTaxRate );
     }
@@ -149,17 +155,59 @@ class taxModel2019{
             taxesDue += amountToUseForCalculation * taxBracket[key].rate;
             currentAGI -= amountToUseForCalculation;
         }
-        this.totalTaxesDue = taxesDue;
+        this.totalTaxDue = taxesDue;
         this.taxBracketRate = taxBracketRate;
-        console.log("Taxes due before applying credits: " + this.totalTaxesDue);
+        console.log("Taxes due before applying credits: " + this.totalTaxDue);
         console.log("Tax bracket rate: " + this.taxBracketRate);
     }
 
     calculateTaxCredits(){
+        
         //calulate tax credits based on dependants
-        var result = dependantsTaxCredit.child * this.numberOfDependantChildren + dependantsTaxCredit.relative * this.numberOfDependantRelatives;
+        var result = 0;
+        result += this.getTaxCreditsForDependantRelatives();
+        result += this.getTaxCreditsForDependantChildren();
         result += this.taxCreditsDeductions;
         console.log("Total tax credits are: " + result);
+        return result;
+    }
+
+    getTaxCreditsForDependantChildren(){
+        return dependantsTaxCredit.child * this.numberOfDependantChildren;
+    }
+    getRefundableTaxCreditsForDependantChildren(){
+        return dependantsTaxCredit.childRefundable * this.numberOfDependantChildren;
+    }
+
+    getTaxCreditsForDependantRelatives(){
+        return dependantsTaxCredit.relative * this.numberOfDependantRelatives;
+    }
+
+    //negative balance means you own taxes, positive balance means you get refund
+    calculateBalance(){
+        var result = this.totalTaxesWithheld - this.totalTaxDue;
+        /*
+        business logic: only tax credits for child is refundable up to $1400 
+        (so if person makes $0 this year they can only get refund up to $1400 for each child).        
+        */
+       
+        //substract non-refundable credit = up to zero
+        if(result > 0 && this.getTaxCreditsForDependantRelatives() > 0){
+            result -= this.getTaxCreditsForDependantRelatives();
+            //if after this reduction it gets negative we set it to zero
+            if(result < 0){
+                result = 0;
+            }
+        }
+        //substract non-refundable credit = up to zero. For each child only $1400 is refundable
+        if(result > 0 && this.getTaxCreditsForDependantChildren() > 0){
+            //maximize tax credit, by using all refundable tax credits
+            var nonrefundable = this.getTaxCreditsForDependantChildren() - this.getRefundableTaxCreditsForDependantChildren();
+            result -= nonrefundable;
+            if(result < 0){
+                result = 0;
+            }
+        }
         return result;
     }
 
