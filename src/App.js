@@ -6,6 +6,27 @@ import DataEntrySection from './DataEntrySection';
 import CONSTANTS from './constants';
 import * as utils from './utils';
 import taxModel2019 from './taxModel2019';
+import {VictoryChart, VictoryLine, VictoryVoronoiContainer, VictoryTheme, VictoryAxis, VictoryCursorContainer} from 'victory'
+
+
+var colors = {
+  primaryColor: "#0d47a1",
+  primaryLightColor: "#5472d3",
+  primaryDarkColor: "#002171",
+  onPrimaryColor: "#FFFFFF",
+  onPrimaryLightColor: "#000000",
+  onPrimaryDarkColor: "#f1f8e9",
+
+  secondaryColor: "#689f38",
+  secondaryLightColor: "#99d066",
+  secondaryDarkColor: "#387002",
+  onSecondaryColor: "#FFFFFF",
+  onSecondaryLightColor: "#000000",
+  onSecondaryDarkColor: "#FFFFFF",
+
+  errorColor: "#B00020",
+  onErrorColor: "#FFFFFF",
+}
 
 var deductionModeRadioData = {
   groupName: "deduction-mode",
@@ -120,6 +141,7 @@ class App extends React.Component {
     this.changeTaxCreditsDeductions = this.changeTaxCreditsDeductions.bind(this);
     this.changeOtherDeductionsStatus = this.changeOtherDeductionsStatus.bind(this);
     this.calculateTaxes = this.calculateTaxes.bind(this);
+    this.renderGraph = this.renderGraph.bind(this);
     
     this.taxModel = new taxModel2019(this.state);
   }
@@ -233,6 +255,8 @@ class App extends React.Component {
       resultMessage = "Looks like you will be all square! Nothing to pay, but no refund either...";
     } 
 
+    var graph = this.renderGraph();
+
     return (
       <div className="App">
         <header className="App-header">
@@ -288,7 +312,10 @@ class App extends React.Component {
                   <div className="results-row-value">{utils.convertToCurrency(this.state.balance, true)}</div>                 
                 </div>
               </div>
-                      
+              <div className="graph-container">
+                {graph}
+              </div>
+              
             </div>  
 
             
@@ -387,7 +414,71 @@ class App extends React.Component {
       </div>
     );
   }
+  
+  renderGraph(){
+    var testData = [
+      { x: 1, y: 2 },
+      { x: 2, y: 3 },
+      { x: 3, y: 12 },
+      { x: 42, y: 14 },
+      { x: 55, y: 76 }
+    ];
 
+    var dataset = testData; 
+
+   return (
+      <VictoryChart
+        domainPadding={{x: [10, 0], y: 10}}
+        //minDomain={{x:0, y: 0 }}
+        containerComponent={
+          /* - nice feature but seems to be lagging
+          <VictoryCursorContainer
+            cursorDimension="x"
+            cursorLabel={({ datum }) => `${Math.floor(datum.x)}, ${Math.floor(datum.y)}`}
+          
+          />*/
+          <VictoryVoronoiContainer            
+            labels={({ datum }) => `tax ${datum.x}, ${datum.y}`}
+          />
+        }
+      >
+        <VictoryAxis crossAxis
+          label='X axis label'
+          style={{
+            axis: {stroke: colors.primaryDarkColor},
+            axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor}, 
+            grid: {stroke: ({ tick }) => tick > 25 ? "red" : "grey", opacity: 0.5, },
+            tickLabels: {fontSize: 12, padding: 8, fill: colors.primaryDarkColor},
+          }}
+        />
+        <VictoryAxis dependentAxis crossAxis
+          label='Y axis label'
+          style={{
+            axis: {stroke: colors.primaryDarkColor},
+            axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor},            
+            grid: {stroke: "grey"},
+            tickLabels: {fontSize: 12, padding: 8, fill: colors.primaryDarkColor},
+          }}
+        />
+        
+
+        <VictoryLine
+          name = "series-1"
+          interpolation="catmullRom"
+          data={dataset}
+          style={{
+            data: { stroke: "#5472d3" }
+          }}
+          //draw the line - animation
+          animate={{
+            duration: 2000,
+            onLoad: { duration: 1000 }
+          }}
+        />
+      </VictoryChart>
+   )
+      
+  }
 
 
 }

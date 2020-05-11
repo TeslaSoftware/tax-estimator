@@ -152,6 +152,6 @@ taxBrackets[CONSTANTS.FILING_STATUS_VALUE.HEAD_OF_HOUSEHOLD] = {
         to: Number.MAX_SAFE_INTEGER
     },
 }
-console.log("brackets: " + taxBrackets);
+
 
 export default taxBrackets;
