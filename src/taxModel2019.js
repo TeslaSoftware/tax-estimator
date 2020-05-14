@@ -6,7 +6,7 @@ var keysForNumericProperties = ['numberOfDependantChildren', 'numberOfDependantR
     'itemizedDeductionValue', 'wages', 'taxWithhold', 'wagesSpouse', 'taxWithholdSpouse', 'preTaxDeductions', 'taxCreditsDeductions'];
 var keysForStringProperties = ['filingStatus', 'deductionMode', 'dependantsClaimStatus', 'otherDeductionsStatus'];
 //keys for valid state properties, that are not used by model
-var keysForExcludedProperties = ['totalIncome', 'AGI', 'totalTaxWithheld', 'totalTaxDue', 'balance']
+var keysForExcludedProperties = ['totalIncome', 'AGI', 'totalTaxWithheld', 'totalTaxDue', 'balance', 'graphDataSet']
 var keysForResultProperties = [ 'totalIncome', 'totalTaxableIncome' ,'totalTaxesWithheld', 'totalTaxDue', 
 'balance', 'taxBracketRate', 'effectiveTaxRate'];
 
@@ -25,18 +25,63 @@ dependantsTaxCredit.childRefundable = 1400;
 dependantsTaxCredit.relative = 500; 
 
 
-class taxModel2019{        
+//Logging wrapper for regular logs. Warnings and errors shoudl be displayed in regular way
+//to activate via browser console enter: window.debugMode = true
+window.debugMode = true;
+var log = function(){
+    if(window.debugMode){
+        console.log.apply(console, arguments);
+    }
+}
+var logGroupCollapsed = function(){
+    if(window.debugMode){
+        console.groupCollapsed.apply(console, arguments);
+    }
+}
+var logGroupEnd = function(){
+    if(window.debugMode){
+        console.groupEnd.apply(console, arguments);
+    }
+}
+
+
+
+
+class taxModel2019{      
+      
     
     constructor(state){
-        this.stateOfModel = state;
-        this.parseState();
-        //create object properties for results
-        keysForResultProperties.forEach( prop  => this[prop] = 0);
+        //basic variables used for calculations
+        this.wages = 0;
+        this.wagesSpouse = 0;
+        this.taxWithhold = 0;
+        this.taxWithholdSpouse = 0;
+
+        this.totalIncome = 0;
+        this.totalTaxableIncome = 0;
+        this.totalTaxesWithheld = 0;
+        this.totalTaxDue = 0;
+        this.balance = 0;
+        this.taxBracketRate = 0;
+        this.effectiveTaxRate = 0;
+
+        this.deductionMode = CONSTANTS.DEDUCTION_MODE.STANDARD;
+        this.filingStatus = CONSTANTS.FILING_STATUS_VALUE.SINGLE;
+
+        this.numberOfDependantChildren = 0;
+        this.numberOfDependantRelatives = 0;
+        this.itemizedDeductionValue = 0;
+        this.taxCreditsDeductions = 0;
+        this.preTaxDeductions = 0;
+
+        //set and parse state
+        this.parseState(state);
     }
 
-    updateState(newState){
-        this.stateOfModel = newState;
-        this.parseState();        
+
+
+    updateState(newState){        
+        this.parseState(newState);        
     }
 
     
@@ -44,8 +89,12 @@ class taxModel2019{
     Parses state to create members variables /object properties with the same keys. 
     Depends on the globally defined set of string and numeric keys. Logs warning if property key is found that does not belong to any of these two sets.
     */
-    parseState(){
-        for (let [key, value] of Object.entries(this.stateOfModel)) {
+    parseState(newState){
+        this.stateOfModel = newState;
+
+        //TODO: get ride of assignments and just live it for validation purposes
+        /*
+        for (let [key, value] of Object.entries(newState)) {
             if(keysForNumericProperties.includes(key)){
                 this[key] = utils.convertStringToNumber(value)
             }
@@ -56,10 +105,26 @@ class taxModel2019{
                 console.warn("Unexpected property found during parsing the state. Property key is " + key);
             }                 
         }
+        */
+
+        this.wages = utils.convertStringToNumber(newState.wages);
+        this.wagesSpouse = utils.convertStringToNumber(newState.wagesSpouse);
+        this.taxWithhold = utils.convertStringToNumber(newState.taxWithhold);
+        this.taxWithholdSpouse = utils.convertStringToNumber(newState.taxWithholdSpouse);
+
+        this.filingStatus = newState.filingStatus;
+        this.deductionMode = newState.deductionMode;
+
+        //parse variables for credits and deductions
+        this.numberOfDependantChildren = newState.numberOfDependantChildren;
+        this.numberOfDependantRelatives = newState.numberOfDependantRelatives;
+        this.itemizedDeductionValue = newState.itemizedDeductionValue;
+        this.taxCreditsDeductions = utils.convertStringToNumber(newState.taxCreditsDeductions);
+        this.preTaxDeductions = utils.convertStringToNumber(newState.preTaxDeductions);
     }
 
     printoutModel(){
-        console.log(this.stateOfModel);
+        log(this.stateOfModel);
     }
 
     getState(){
@@ -67,19 +132,20 @@ class taxModel2019{
     }
 
 
-    eqals(otherState){
+    hasTheSameState(otherState){
         //assuming no particular order is preserved between properties of original object and compared
         for (let [key, value] of Object.entries(otherState)) {
             if(this.stateOfModel[key] !== value){
-                console.log(`TaxModel2019.equals(): Objects are different. Mismatch found in key: '${key}'. Model state value: '${this.stateOfModel[key]}', otherState value: '${value}' `);
+                log(`TaxModel2019.hasTheSameState(): Objects are different. Mismatch found in key: '${key}'. Model state value: '${this.stateOfModel[key]}', otherState value: '${value}' `);
                 return false;
             }             
         }
-        console.log("TaxModel2019.equals(): Objects are the same");
+        log("TaxModel2019.hasTheSameState(): Objects are the same");
         return true;
     }
 
-    recalculate(){
+    recalculate(){      
+        logGroupCollapsed("taxModel2019.recalculate() group:");
         //total wages are considered from both spouses only if they are filing jointly
         if(this.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY){
             this.totalIncome = this.wages + this.wagesSpouse;
@@ -89,8 +155,9 @@ class taxModel2019{
             this.totalIncome = this.wages;
             this.totalTaxesWithheld = this.taxWithhold;
         }
-        console.log("Total Income: " + this.totalIncome);
-        
+        log("Total Income: " + this.totalIncome);
+
+
         //calculate pre-tax deductions:standard or itemized deduction, and other deductions
         var deductionsValue = 0;
         if(this.deductionMode === CONSTANTS.DEDUCTION_MODE.STANDARD){
@@ -103,13 +170,18 @@ class taxModel2019{
             console.error("Unsupported deduction mode selcted: " + this.deductionMode);
         }
 
-        console.log("Based on deduction mode, current deduction value is " + deductionsValue);
+        deductionsValue += this.preTaxDeductions;
+
+        log("Total amount for deductions is currently: " + deductionsValue);
+        //add other pre-tax deductions as specified by user
+        
+
         //calculate taxable income (if less than zero then change to zero)
         this.taxableIncome = this.totalIncome - deductionsValue;
         if(this.taxableIncome < 0){
             this.taxableIncome = 0;
         }
-        console.log("Taxable income value is " + this.taxableIncome);
+        log("Taxable income value is " + this.taxableIncome);
 
         //calculate taxes due & tax bracket
         this.calcualteTaxesDue();
@@ -119,12 +191,12 @@ class taxModel2019{
         
         //update taxes due, by subtracting tax credits
         this.totalTaxDue -= taxCreditsValue;
-        console.log("Tax due after deducting tax credits: " +this.totalTaxDue  );
+        log("Tax due after deducting tax credits: " +this.totalTaxDue  );
         //calculate balance
 
         this.balance = this.calculateBalance();
         
-        console.log("Balance is: " + this.balance);
+        log("Balance is: " + this.balance);
         /*calculate effective tax rate = Taxes Due (aka total tax) / Taxable Income (income before adjustments)
         An individual's effective tax rate represents the average of all tax brackets that their income passes through 
         as well as the total of all deductions and credits that lower their total income to their taxable income.
@@ -133,7 +205,8 @@ class taxModel2019{
        if(this.totalIncome !== 0){
         this.effectiveTaxRate = this.totalTaxDue / this.totalIncome;
        } 
-       console.log("Effective Tax Rate is : " + this.effectiveTaxRate );
+       log("Effective Tax Rate is : " + this.effectiveTaxRate );
+       logGroupEnd();
     }
 
     calcualteTaxesDue(){
@@ -157,18 +230,17 @@ class taxModel2019{
         }
         this.totalTaxDue = taxesDue;
         this.taxBracketRate = taxBracketRate;
-        console.log("Taxes due before applying credits: " + this.totalTaxDue);
-        console.log("Tax bracket rate: " + this.taxBracketRate);
+        log("Taxes due before applying credits: " + this.totalTaxDue);
+        log("Tax bracket rate: " + this.taxBracketRate);
     }
 
-    calculateTaxCredits(){
-        
+    calculateTaxCredits(){        
         //calulate tax credits based on dependants
         var result = 0;
         result += this.getTaxCreditsForDependantRelatives();
         result += this.getTaxCreditsForDependantChildren();
         result += this.taxCreditsDeductions;
-        console.log("Total tax credits are: " + result);
+        log("Total tax credits are: " + result);
         return result;
     }
 
@@ -182,6 +254,27 @@ class taxModel2019{
     getTaxCreditsForDependantRelatives(){
         return dependantsTaxCredit.relative * this.numberOfDependantRelatives;
     }
+
+    getTotalIncome(){ return this.totalIncome; }
+
+    getTotalTaxDue(){ return this.totalTaxDue; }
+
+    getWages(){ return this.wages; }
+
+    getWagesSpouse(){ return this.wagesSpouse; }
+
+    setWages(newWages){
+        this.wages = newWages;
+    }
+
+    setWagesSpouse(newWagesSpouse){
+        this.wagesSpouse =  newWagesSpouse;
+    }
+
+    
+
+
+    
 
     //negative balance means you own taxes, positive balance means you get refund
     calculateBalance(){

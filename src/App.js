@@ -126,6 +126,7 @@ class App extends React.Component {
       totalTaxWithheld: 0,
       totalTaxDue: 0,
       balance: 0,
+      graphDataSet: [],
     }
     this.changeFilingStatus = this.changeFilingStatus.bind(this);
     this.changeDeductionMode = this.changeDeductionMode.bind(this);
@@ -142,6 +143,7 @@ class App extends React.Component {
     this.changeOtherDeductionsStatus = this.changeOtherDeductionsStatus.bind(this);
     this.calculateTaxes = this.calculateTaxes.bind(this);
     this.renderGraph = this.renderGraph.bind(this);
+    this.generateDataSetForGraph = this.generateDataSetForGraph.bind(this);
     
     this.taxModel = new taxModel2019(this.state);
   }
@@ -333,17 +335,21 @@ class App extends React.Component {
   calculateTaxes(){
     console.log("calculating taxes");
     //update taxModel and recalculate
-    if(!this.taxModel.eqals(this.state)){      
+    if(!this.taxModel.hasTheSameState(this.state)){      
       this.taxModel.updateState(this.state);
+      this.taxModel.recalculate();
+      this.setState({
+        balance : this.taxModel.balance,
+        totalIncome: this.taxModel.totalIncome,
+        AGI: this.taxModel.totalTaxableIncome,
+        totalTaxWithheld: this.taxModel.totalTaxesWithheld,
+        totalTaxDue: this.taxModel.totalTaxDue,
+      });
     }
-    this.taxModel.recalculate();
-    this.setState({
-      balance : this.taxModel.balance,
-      totalIncome: this.taxModel.totalIncome,
-      AGI: this.taxModel.totalTaxableIncome,
-      totalTaxWithheld: this.taxModel.totalTaxesWithheld,
-      totalTaxDue: this.taxModel.totalTaxDue,
-    });
+    
+    
+    //update graph data
+    this.generateDataSetForGraph();
   }
 
 
@@ -424,7 +430,10 @@ class App extends React.Component {
       { x: 55, y: 76 }
     ];
 
+    //var dataSetForGraph = this.generateDataSetForGraph();
+    //console.log(dataSetForGraph);
     var dataset = testData; 
+
 
    return (
       <VictoryChart
@@ -443,7 +452,7 @@ class App extends React.Component {
         }
       >
         <VictoryAxis crossAxis
-          label='X axis label'
+          label='Gross Income'
           style={{
             axis: {stroke: colors.primaryDarkColor},
             axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor}, 
@@ -452,7 +461,7 @@ class App extends React.Component {
           }}
         />
         <VictoryAxis dependentAxis crossAxis
-          label='Y axis label'
+          label='Taxes Due'
           style={{
             axis: {stroke: colors.primaryDarkColor},
             axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor},            
@@ -478,6 +487,63 @@ class App extends React.Component {
       </VictoryChart>
    )
       
+  }
+
+  generateDataSetForGraph(){
+    const INCREMENT = 10000; //$10,000 as increment/decreament
+    const NUM_OF_GRAPH_POINTS_TO_LEFT = 5;
+    const NUM_OF_GRAPH_POINTS_TO_RIGHT = 10;
+    console.log("Generating dataset for graph...");
+    let dataset = [];
+    //clone the model
+    let model = new taxModel2019(this.state);
+    //need to recalculate first so all the variables are set
+    model.recalculate();
+    let income = model.getTotalIncome();
+   
+
+    /*
+    get min and max income values based on current income. 
+    Min income should be more than zero (i.e. cannot be negtive).
+    */
+
+    //min income for graph point - point all the way to the left
+    let minIncome =  income;
+    for(let iter = NUM_OF_GRAPH_POINTS_TO_LEFT; iter >0 ; iter--){
+      let candidateForMinIncome = minIncome - INCREMENT;
+      if(candidateForMinIncome > 0){
+        minIncome = candidateForMinIncome
+      }
+      else{
+        //we already at zero or less - may as well break out of the loop
+        break;
+      }
+    }
+    console.log("Min income is: " + minIncome);
+
+    /*
+    Go from min to max and for each income value calculate tax value. 
+    Place results in an array of objects, where each object has x and y values.
+    X is gross income, Y is taxes due.
+    */
+    
+    //First go from minIncome to income
+    for(let currentIncome = minIncome; currentIncome <= income; currentIncome += INCREMENT){
+        //for sake of calculation assume that entire income comes from primary wages and spouse did not have income
+        model.setWagesSpouse(0);
+        model.setWages(currentIncome);
+        model.recalculate();
+        let taxesDue = model.getTotalTaxDue();
+        console.log("taxes due are: " + taxesDue + ", current income is: " + currentIncome);
+        dataset.push({x: currentIncome, y: taxesDue});
+    }
+
+    //Then go from current income and increament as per number of graph points to the right
+
+
+    this.setState({
+      graphDataSet: dataset
+    });
   }
 
 
