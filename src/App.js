@@ -6,7 +6,7 @@ import DataEntrySection from './DataEntrySection';
 import CONSTANTS from './constants';
 import * as utils from './utils';
 import taxModel2019 from './taxModel2019';
-import {VictoryChart, VictoryLine, VictoryVoronoiContainer, VictoryLegend, VictoryAxis, VictoryGroup, VictoryScatter} from 'victory'
+import {VictoryChart, VictoryLine, VictoryVoronoiContainer, VictoryLegend, VictoryAxis, VictoryGroup, VictoryScatter, VictoryTooltip, VictoryArea, VictoryTheme} from 'victory'
 
 
 var colors = {
@@ -429,30 +429,37 @@ class App extends React.Component {
 
    return (
       <VictoryChart
-        domainPadding={{x: [10, 0], y: 10}}
-        //minDomain={{x:0, y: 0 }}
+        domainPadding={{x: [0, 0], y: [0, 5]}}
         containerComponent={
           <VictoryVoronoiContainer           
             labels={({ datum }) => `Gross Income: $${datum.x}, \n ${datum.description} $${datum.y}`}
+            labelComponent={
+              <VictoryTooltip  dy={-7} constrainToVisibleArea />
+            }
           />
         }
       >
-        <VictoryLegend x={125} y={10}
+        <VictoryLegend x={120} y={10}
           orientation="horizontal"
           gutter={20}
           style={{ border: { stroke: colors.primaryDarkColor } }}
-          colorScale={[ colors.primaryLightColor, colors.secondaryColor]}
+          colorScale={[ colors.primaryLightColor, colors.secondaryLightColor]}
           data={[
             { name: "Tax Due" }, { name: "Net Income" }
           ]}
         />
+
         <VictoryAxis crossAxis
           label='Gross Income'
           style={{
             axis: {stroke: colors.primaryDarkColor},
-            axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor}, 
-            grid: {stroke: ({ tick }) => tick > 25 ? "red" : "grey", opacity: 0.5, },
+            axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor},
             tickLabels: {fontSize: 12, padding: 8, fill: colors.primaryDarkColor},
+            grid: {
+              stroke: ({ tick }) => tick > 50000 ? colors.secondaryDarkColor : colors.primaryDarkColor ,
+              opacity: 0.5,
+              strokeDasharray: "10, 5",
+            }            
           }}
         />
 
@@ -460,18 +467,57 @@ class App extends React.Component {
           //label='Amount [$]'
           style={{
             axis: {stroke: colors.primaryDarkColor},
-            axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor},            
-            grid: {stroke: "grey"},
+            axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor},
             tickLabels: {fontSize: 12, padding: 8, fill: colors.primaryDarkColor},
+            grid: {
+              stroke: colors.primaryDarkColor, 
+              opacity: 0.5,
+              strokeDasharray: "10, 5",
+            }
           }}
         />
         
+        
+
+        
+        <VictoryArea
+          name = "Net Income"
+          interpolation="catmullRom"
+          data={graphDataSetNetIncome}
+          style={{
+            data: { stroke: colors.secondaryColor, fill: colors.secondaryLightColor, opacity: 0.75, }
+          }}
+          //draw the line - animation
+          animate={{
+            duration: 500,
+            onLoad: { duration: 1000 }
+          }}
+        />
+
+        <VictoryArea
+            name = "series-1"
+            interpolation="catmullRom"
+            data={graphDataSetTaxDue}
+            style={{
+              data: { stroke: colors.primaryColor , fill: colors.primaryLightColor, opacity: 0.75, }
+            }}
+            //draw the line - animation
+            animate={{
+              duration: 500,
+              onLoad: { duration: 1000 }
+            }}
+        />
+
         {this.state.balance < 0 &&
         //render only if balance is larger then zero - to avoid poorly looking graph
         <VictoryScatter
           symbol="star"
           size={7}
-          style={{ data: { fill: colors.primaryLightColor} }}
+          style={{ data: { 
+            stroke: colors.primaryColor , 
+            fill: colors.primaryLightColor,
+            strokeWidth: 2
+            } }}
           data = {[{ x: this.state.totalIncome, y: this.state.totalTaxDue  }]}        
         />
         }
@@ -481,40 +527,16 @@ class App extends React.Component {
         <VictoryScatter
           symbol="star"
           size={7}
-          style={{ data: { fill: colors.secondaryLightColor} }}
+          style={{ data: { 
+            stroke: colors.secondaryColor, 
+            fill: colors.secondaryLightColor,
+            strokeWidth: 2
+            } }}
           data = {[{ x: this.state.totalIncome, y: this.state.totalIncome - this.state.totalTaxDue }]}        
         />
         }
 
-        <VictoryGroup>
-          <VictoryLine
-            name = "series-1"
-            interpolation="catmullRom"
-            data={graphDataSetTaxDue}
-            style={{
-              data: { stroke: colors.primaryLightColor }
-            }}
-            //draw the line - animation
-            animate={{
-              duration: 500,
-              onLoad: { duration: 1000 }
-            }}
-          />
-        </VictoryGroup>
 
-        <VictoryLine
-          name = "series-2"
-          interpolation="catmullRom"
-          data={graphDataSetNetIncome}
-          style={{
-            data: { stroke: colors.secondaryLightColor }
-          }}
-          //draw the line - animation
-          animate={{
-            duration: 500,
-            onLoad: { duration: 1000 }
-          }}
-        />
       </VictoryChart>
    )
       
@@ -567,7 +589,7 @@ class App extends React.Component {
           model.setWages(currentIncome);
           model.recalculate();
           let taxesDue = Math.floor(model.getTotalTaxDue());
-          console.log("taxes due are: " + taxesDue + ", current income is: " + currentIncome);
+          console.log("Adding datapoint. Values: taxes due: " + taxesDue + ", current income: " + currentIncome);
           if(taxesDue > 0){
             //only add to points to display if tax due has positive value
             datasetTaxDue.push({x: currentIncome, y: taxesDue, description: "Tax Due"});
@@ -575,8 +597,8 @@ class App extends React.Component {
           }
           //add values for user entered data if they are within inverval of this and next iteration
           if(currentIncome < this.state.totalIncome && currentIncome + INCREMENT > this.state.totalIncome){
-            datasetTaxDue.push({x: this.state.totalIncome, y: this.state.totalTaxDue, description: "Tax Due"});
-            datasetNetIncome.push({x: this.state.totalIncome, y:  this.state.totalIncome - this.state.totalTaxDue, description: "Net Income"});
+            datasetTaxDue.push({x: this.state.totalIncome, y: Math.floor(this.state.totalTaxDue), description: "Tax Due"});
+            datasetNetIncome.push({x: this.state.totalIncome, y:  Math.floor(this.state.totalIncome - this.state.totalTaxDue), description: "Net Income"});
           }
         }
     }    
