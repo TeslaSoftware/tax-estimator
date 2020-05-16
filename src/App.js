@@ -433,7 +433,7 @@ class App extends React.Component {
         //minDomain={{x:0, y: 0 }}
         containerComponent={
           <VictoryVoronoiContainer           
-            labels={({ datum }) => `Gross Income: $${datum.x}, ${datum.description} $${datum.y}`}
+            labels={({ datum }) => `Gross Income: $${datum.x}, \n ${datum.description} $${datum.y}`}
           />
         }
       >
