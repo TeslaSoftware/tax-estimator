@@ -6,9 +6,7 @@ var keysForNumericProperties = ['numberOfDependantChildren', 'numberOfDependantR
     'itemizedDeductionValue', 'wages', 'taxWithhold', 'wagesSpouse', 'taxWithholdSpouse', 'preTaxDeductions', 'taxCreditsDeductions'];
 var keysForStringProperties = ['filingStatus', 'deductionMode', 'dependantsClaimStatus', 'otherDeductionsStatus'];
 //keys for valid state properties, that are not used by model
-var keysForExcludedProperties = ['totalIncome', 'AGI', 'totalTaxWithheld', 'totalTaxDue', 'balance', 'graphDataSet']
-var keysForResultProperties = [ 'totalIncome', 'totalTaxableIncome' ,'totalTaxesWithheld', 'totalTaxDue', 
-'balance', 'taxBracketRate', 'effectiveTaxRate'];
+var keysForExcludedProperties = ['totalIncome', 'AGI', 'totalTaxWithheld', 'totalTaxDue', 'balance', 'graphDataSet', 'graphDataSetTaxDue', 'graphDataSetNetIncome' ];
 
 //Define standard deductions values for tax year 2019
 var standardDeductions = {};
@@ -92,21 +90,14 @@ class taxModel2019{
     parseState(newState){
         this.stateOfModel = newState;
 
-        //TODO: get ride of assignments and just live it for validation purposes
-        /*
+        //Validate properties of newState        
         for (let [key, value] of Object.entries(newState)) {
-            if(keysForNumericProperties.includes(key)){
-                this[key] = utils.convertStringToNumber(value)
-            }
-            else if(keysForStringProperties.includes(key)){
-                this[key] = value;    
-            }
-            else if( !keysForExcludedProperties.includes(key)){
-                console.warn("Unexpected property found during parsing the state. Property key is " + key);
+            if( !keysForNumericProperties.includes(key) && !keysForStringProperties.includes(key) && !keysForExcludedProperties.includes(key)){
+                console.warn("Unexpected property found during parsing the state. Property key is " + key + " and has value " + value);
             }                 
         }
-        */
 
+        //set variables from state
         this.wages = utils.convertStringToNumber(newState.wages);
         this.wagesSpouse = utils.convertStringToNumber(newState.wagesSpouse);
         this.taxWithhold = utils.convertStringToNumber(newState.taxWithhold);

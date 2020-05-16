@@ -6,7 +6,7 @@ import DataEntrySection from './DataEntrySection';
 import CONSTANTS from './constants';
 import * as utils from './utils';
 import taxModel2019 from './taxModel2019';
-import {VictoryChart, VictoryLine, VictoryVoronoiContainer, VictoryTheme, VictoryAxis, VictoryCursorContainer} from 'victory'
+import {VictoryChart, VictoryLine, VictoryVoronoiContainer, VictoryLegend, VictoryAxis, VictoryGroup, VictoryScatter} from 'victory'
 
 
 var colors = {
@@ -126,7 +126,8 @@ class App extends React.Component {
       totalTaxWithheld: 0,
       totalTaxDue: 0,
       balance: 0,
-      graphDataSet: [],
+      graphDataSetTaxDue: [],
+      graphDataSetNetIncome: [],
     }
     this.changeFilingStatus = this.changeFilingStatus.bind(this);
     this.changeDeductionMode = this.changeDeductionMode.bind(this);
@@ -422,35 +423,29 @@ class App extends React.Component {
   }
   
   renderGraph(){
-    var testData = [
-      { x: 1, y: 2 },
-      { x: 2, y: 3 },
-      { x: 3, y: 12 },
-      { x: 42, y: 14 },
-      { x: 55, y: 76 }
-    ];
-
-    //var dataSetForGraph = this.generateDataSetForGraph();
-    //console.log(dataSetForGraph);
-    var dataset = testData; 
-
+     
+    var graphDataSetTaxDue = this.state.graphDataSetTaxDue;
+    var graphDataSetNetIncome = this.state.graphDataSetNetIncome;
 
    return (
       <VictoryChart
         domainPadding={{x: [10, 0], y: 10}}
         //minDomain={{x:0, y: 0 }}
         containerComponent={
-          /* - nice feature but seems to be lagging
-          <VictoryCursorContainer
-            cursorDimension="x"
-            cursorLabel={({ datum }) => `${Math.floor(datum.x)}, ${Math.floor(datum.y)}`}
-          
-          />*/
-          <VictoryVoronoiContainer            
-            labels={({ datum }) => `tax ${datum.x}, ${datum.y}`}
+          <VictoryVoronoiContainer           
+            labels={({ datum }) => `Gross Income: $${datum.x}, ${datum.description} $${datum.y}`}
           />
         }
       >
+        <VictoryLegend x={125} y={10}
+          orientation="horizontal"
+          gutter={20}
+          style={{ border: { stroke: colors.primaryDarkColor } }}
+          colorScale={[ colors.primaryLightColor, colors.secondaryColor]}
+          data={[
+            { name: "Tax Due" }, { name: "Net Income" }
+          ]}
+        />
         <VictoryAxis crossAxis
           label='Gross Income'
           style={{
@@ -460,8 +455,9 @@ class App extends React.Component {
             tickLabels: {fontSize: 12, padding: 8, fill: colors.primaryDarkColor},
           }}
         />
+
         <VictoryAxis dependentAxis crossAxis
-          label='Taxes Due'
+          //label='Amount [$]'
           style={{
             axis: {stroke: colors.primaryDarkColor},
             axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor},            
@@ -470,17 +466,52 @@ class App extends React.Component {
           }}
         />
         
+        {this.state.balance < 0 &&
+        //render only if balance is larger then zero - to avoid poorly looking graph
+        <VictoryScatter
+          symbol="star"
+          size={7}
+          style={{ data: { fill: colors.primaryLightColor} }}
+          data = {[{ x: this.state.totalIncome, y: this.state.totalTaxDue  }]}        
+        />
+        }
+
+        {this.state.balance < 0 &&
+        //render only if balance is larger then zero - to avoid poorly looking graph
+        <VictoryScatter
+          symbol="star"
+          size={7}
+          style={{ data: { fill: colors.secondaryLightColor} }}
+          data = {[{ x: this.state.totalIncome, y: this.state.totalIncome - this.state.totalTaxDue }]}        
+        />
+        }
+
+        <VictoryGroup>
+          <VictoryLine
+            name = "series-1"
+            interpolation="catmullRom"
+            data={graphDataSetTaxDue}
+            style={{
+              data: { stroke: colors.primaryLightColor }
+            }}
+            //draw the line - animation
+            animate={{
+              duration: 500,
+              onLoad: { duration: 1000 }
+            }}
+          />
+        </VictoryGroup>
 
         <VictoryLine
-          name = "series-1"
+          name = "series-2"
           interpolation="catmullRom"
-          data={dataset}
+          data={graphDataSetNetIncome}
           style={{
-            data: { stroke: "#5472d3" }
+            data: { stroke: colors.secondaryLightColor }
           }}
           //draw the line - animation
           animate={{
-            duration: 2000,
+            duration: 500,
             onLoad: { duration: 1000 }
           }}
         />
@@ -490,59 +521,69 @@ class App extends React.Component {
   }
 
   generateDataSetForGraph(){
-    const INCREMENT = 10000; //$10,000 as increment/decreament
+    //$10,000 as increment/decreament
+    const INCREMENT = 10000; 
+    //Graph points to the left (and right) from the user set value for gross income 
     const NUM_OF_GRAPH_POINTS_TO_LEFT = 5;
-    const NUM_OF_GRAPH_POINTS_TO_RIGHT = 10;
+    const NUM_OF_GRAPH_POINTS_TO_RIGHT = 5;
     console.log("Generating dataset for graph...");
-    let dataset = [];
+    let datasetTaxDue = [];
+    let datasetNetIncome = [];
     //clone the model
     let model = new taxModel2019(this.state);
-    //need to recalculate first so all the variables are set
+    //need to recalculate first so all the variables are set (and you can get reliable value for total)
     model.recalculate();
     let income = model.getTotalIncome();
    
 
     /*
-    get min and max income values based on current income. 
-    Min income should be more than zero (i.e. cannot be negtive).
+    Get start point income for graph point (point with value all the way to the left)
+    Start point income should be more than zero (i.e. cannot be negtive).
     */
-
-    //min income for graph point - point all the way to the left
-    let minIncome =  income;
+    let startPointIncome =  income;
     for(let iter = NUM_OF_GRAPH_POINTS_TO_LEFT; iter >0 ; iter--){
-      let candidateForMinIncome = minIncome - INCREMENT;
-      if(candidateForMinIncome > 0){
-        minIncome = candidateForMinIncome
+      let candidateForStartPointIncome = startPointIncome - INCREMENT;
+      if(candidateForStartPointIncome > 0){
+        startPointIncome = candidateForStartPointIncome
       }
       else{
         //we already at zero or less - may as well break out of the loop
         break;
       }
     }
-    console.log("Min income is: " + minIncome);
+    startPointIncome = Math.floor(startPointIncome / INCREMENT) * INCREMENT;
+    console.log("Start point income is: " + startPointIncome);
 
     /*
-    Go from min to max and for each income value calculate tax value. 
+    Go from start point income to endpoint income (from point most to the left to point most ot the right)
     Place results in an array of objects, where each object has x and y values.
     X is gross income, Y is taxes due.
     */
-    
-    //First go from minIncome to income
-    for(let currentIncome = minIncome; currentIncome <= income; currentIncome += INCREMENT){
+    let endPointIncome = startPointIncome + ((NUM_OF_GRAPH_POINTS_TO_LEFT + NUM_OF_GRAPH_POINTS_TO_RIGHT) * INCREMENT);
+    for(let currentIncome = startPointIncome; currentIncome <= endPointIncome ; currentIncome += INCREMENT){
         //for sake of calculation assume that entire income comes from primary wages and spouse did not have income
-        model.setWagesSpouse(0);
-        model.setWages(currentIncome);
-        model.recalculate();
-        let taxesDue = model.getTotalTaxDue();
-        console.log("taxes due are: " + taxesDue + ", current income is: " + currentIncome);
-        dataset.push({x: currentIncome, y: taxesDue});
-    }
-
-    //Then go from current income and increament as per number of graph points to the right
-
+        if(currentIncome > 0){
+          model.setWagesSpouse(0);
+          model.setWages(currentIncome);
+          model.recalculate();
+          let taxesDue = Math.floor(model.getTotalTaxDue());
+          console.log("taxes due are: " + taxesDue + ", current income is: " + currentIncome);
+          if(taxesDue > 0){
+            //only add to points to display if tax due has positive value
+            datasetTaxDue.push({x: currentIncome, y: taxesDue, description: "Tax Due"});
+            datasetNetIncome.push({x: currentIncome, y: currentIncome-taxesDue, description: "Net Income"});
+          }
+          //add values for user entered data if they are within inverval of this and next iteration
+          if(currentIncome < this.state.totalIncome && currentIncome + INCREMENT > this.state.totalIncome){
+            datasetTaxDue.push({x: this.state.totalIncome, y: this.state.totalTaxDue, description: "Tax Due"});
+            datasetNetIncome.push({x: this.state.totalIncome, y:  this.state.totalIncome - this.state.totalTaxDue, description: "Net Income"});
+          }
+        }
+    }    
 
     this.setState({
-      graphDataSet: dataset
+      graphDataSetTaxDue: datasetTaxDue,
+      graphDataSetNetIncome: datasetNetIncome
     });
   }
 
