@@ -1,6 +1,7 @@
 import * as utils from './utils';
 import CONSTANTS from './constants';
 import taxBrackets from './taxBrackets2019';
+import * as logger from './logger';
 
 var keysForNumericProperties = ['numberOfDependantChildren', 'numberOfDependantRelatives', 
     'itemizedDeductionValue', 'wages', 'taxWithhold', 'wagesSpouse', 'taxWithholdSpouse', 'preTaxDeductions', 'taxCreditsDeductions'];
@@ -23,24 +24,6 @@ dependantsTaxCredit.childRefundable = 1400;
 dependantsTaxCredit.relative = 500; 
 
 
-//Logging wrapper for regular logs. Warnings and errors shoudl be displayed in regular way
-//to activate via browser console enter: window.debugMode = true
-window.debugMode = false;
-var log = function(){
-    if(window.debugMode){
-        console.log.apply(console, arguments);
-    }
-}
-var logGroupCollapsed = function(){
-    if(window.debugMode){
-        console.groupCollapsed.apply(console, arguments);
-    }
-}
-var logGroupEnd = function(){
-    if(window.debugMode){
-        console.groupEnd.apply(console, arguments);
-    }
-}
 
 
 
@@ -115,7 +98,7 @@ class taxModel2019{
     }
 
     printoutModel(){
-        log(this.stateOfModel);
+        logger.log(this.stateOfModel);
     }
 
     getState(){
@@ -127,16 +110,16 @@ class taxModel2019{
         //assuming no particular order is preserved between properties of original object and compared
         for (let [key, value] of Object.entries(otherState)) {
             if(this.stateOfModel[key] !== value){
-                log(`TaxModel2019.hasTheSameState(): Objects are different. Mismatch found in key: '${key}'. Model state value: '${this.stateOfModel[key]}', otherState value: '${value}' `);
+                logger.log(`TaxModel2019.hasTheSameState(): Objects are different. Mismatch found in key: '${key}'. Model state value: '${this.stateOfModel[key]}', otherState value: '${value}' `);
                 return false;
             }             
         }
-        log("TaxModel2019.hasTheSameState(): Objects are the same");
+        logger.log("TaxModel2019.hasTheSameState(): Objects are the same");
         return true;
     }
 
     recalculate(){      
-        logGroupCollapsed("taxModel2019.recalculate() group:");
+        logger.logGroupCollapsed("taxModel2019.recalculate() group:");
         //total wages are considered from both spouses only if they are filing jointly
         if(this.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY){
             this.totalIncome = this.wages + this.wagesSpouse;
@@ -146,7 +129,7 @@ class taxModel2019{
             this.totalIncome = this.wages;
             this.totalTaxesWithheld = this.taxWithhold;
         }
-        log("Total Income: " + this.totalIncome);
+        logger.log("Total Income: " + this.totalIncome);
 
 
         //calculate pre-tax deductions:standard or itemized deduction, and other deductions
@@ -163,7 +146,7 @@ class taxModel2019{
 
         deductionsValue += this.preTaxDeductions;
 
-        log("Total amount for deductions is currently: " + deductionsValue);
+        logger.log("Total amount for deductions is currently: " + deductionsValue);
         //add other pre-tax deductions as specified by user
         
 
@@ -172,7 +155,7 @@ class taxModel2019{
         if(this.taxableIncome < 0){
             this.taxableIncome = 0;
         }
-        log("Taxable income value is " + this.taxableIncome);
+        logger.log("Taxable income value is " + this.taxableIncome);
 
         //calculate taxes due & tax bracket
         this.calcualteTaxesDue();
@@ -182,12 +165,12 @@ class taxModel2019{
         
         //update taxes due, by subtracting tax credits
         this.totalTaxDue -= taxCreditsValue;
-        log("Tax due after deducting tax credits: " +this.totalTaxDue  );
+        logger.log("Tax due after deducting tax credits: " +this.totalTaxDue  );
         //calculate balance
 
         this.balance = this.calculateBalance();
         
-        log("Balance is: " + this.balance);
+        logger.log("Balance is: " + this.balance);
         /*calculate effective tax rate = Taxes Due (aka total tax) / Taxable Income (income before adjustments)
         An individual's effective tax rate represents the average of all tax brackets that their income passes through 
         as well as the total of all deductions and credits that lower their total income to their taxable income.
@@ -196,8 +179,8 @@ class taxModel2019{
        if(this.totalIncome !== 0){
         this.effectiveTaxRate = this.totalTaxDue / this.totalIncome;
        } 
-       log("Effective Tax Rate is : " + this.effectiveTaxRate );
-       logGroupEnd();
+       logger.log("Effective Tax Rate is : " + this.effectiveTaxRate );
+       logger.logGroupEnd();
     }
 
     calcualteTaxesDue(){
@@ -221,8 +204,8 @@ class taxModel2019{
         }
         this.totalTaxDue = taxesDue;
         this.taxBracketRate = taxBracketRate;
-        log("Taxes due before applying credits: " + this.totalTaxDue);
-        log("Tax bracket rate: " + this.taxBracketRate);
+        logger.log("Taxes due before applying credits: " + this.totalTaxDue);
+        logger.log("Tax bracket rate: " + this.taxBracketRate);
     }
 
     calculateTaxCredits(){        
@@ -231,7 +214,7 @@ class taxModel2019{
         result += this.getTaxCreditsForDependantRelatives();
         result += this.getTaxCreditsForDependantChildren();
         result += this.taxCreditsDeductions;
-        log("Total tax credits are: " + result);
+        logger.log("Total tax credits are: " + result);
         return result;
     }
 

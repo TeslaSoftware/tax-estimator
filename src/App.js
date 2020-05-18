@@ -6,27 +6,9 @@ import DataEntrySection from './DataEntrySection';
 import CONSTANTS from './constants';
 import * as utils from './utils';
 import taxModel2019 from './taxModel2019';
-import {VictoryChart, VictoryLine, VictoryVoronoiContainer, VictoryLegend, VictoryAxis, VictoryGroup, VictoryScatter, VictoryTooltip, VictoryArea, VictoryTheme} from 'victory'
+import GraphRenderer from './GraphRenderer';
+import * as logger from './logger';
 
-
-var colors = {
-  primaryColor: "#0d47a1",
-  primaryLightColor: "#5472d3",
-  primaryDarkColor: "#002171",
-  onPrimaryColor: "#FFFFFF",
-  onPrimaryLightColor: "#000000",
-  onPrimaryDarkColor: "#f1f8e9",
-
-  secondaryColor: "#689f38",
-  secondaryLightColor: "#99d066",
-  secondaryDarkColor: "#387002",
-  onSecondaryColor: "#FFFFFF",
-  onSecondaryLightColor: "#000000",
-  onSecondaryDarkColor: "#FFFFFF",
-
-  errorColor: "#B00020",
-  onErrorColor: "#FFFFFF",
-}
 
 var deductionModeRadioData = {
   groupName: "deduction-mode",
@@ -143,8 +125,9 @@ class App extends React.Component {
     this.changeTaxCreditsDeductions = this.changeTaxCreditsDeductions.bind(this);
     this.changeOtherDeductionsStatus = this.changeOtherDeductionsStatus.bind(this);
     this.calculateTaxes = this.calculateTaxes.bind(this);
-    this.renderGraph = this.renderGraph.bind(this);
     this.generateDataSetForGraph = this.generateDataSetForGraph.bind(this);
+    //this.generateResultsSection =  this.generateResultsSection.bind(this);
+    
     
     this.taxModel = new taxModel2019(this.state);
   }
@@ -242,23 +225,9 @@ class App extends React.Component {
   }
 
   
-
-
-
   render(){    
     //here you can add logic
-    var resultMessage = ""
-    if(this.state.balance > 0){
-      resultMessage =  `CONGRATULATIONS! Your estimated refund is: ${utils.convertToCurrency(this.state.balance)}`;
-    }
-    else if(this.state.balance < 0){
-      resultMessage = `Looks like you will owe ${utils.convertToCurrency(this.state.balance)} in taxes.`;
-    }
-    else{
-      resultMessage = "Looks like you will be all square! Nothing to pay, but no refund either...";
-    } 
-
-    var graph = this.renderGraph();
+   
 
     return (
       <div className="App">
@@ -268,15 +237,11 @@ class App extends React.Component {
         <main>
           <div id="main-container">
             {              
-              //TO-DO     
-              //Create a display summary
-              //Add graph
+              //TO-DO
               //Change UI to display step by step one section at a time. Also show progress in squares with numbers- highlight current section number
               //use state variable to keep track on which screen you are and render only that section.You can add all section to an array and display only current index section.
               //develop unit tests
             }
-
-
           
             <DataEntrySection sectionName="FILING STATUS" sectionContent={this.generateFilingStatusSectionContent()} />
             <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={this.generateDeductionModeSectionContent()} />
@@ -285,72 +250,38 @@ class App extends React.Component {
             <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={this.generateOtherDeductionsSectionContent()} />
             <div id="controls-container">
               <button onClick={this.calculateTaxes}>CALCULATE</button>
-            </div>
-            
-            
-            <div id="results-container">
-              <div id="results-container-header">RESULTS</div>
-              <div id="results-container-content">
-                <div className="results-row results-message">
-                  {resultMessage}
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your total wages:</div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalIncome, true)}</div>                 
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your adjusted gross income:</div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.AGI, true)}</div>                 
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your total taxes withheld:</div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxWithheld, true)}</div>                 
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your total taxes due: </div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxDue, true)}</div>                 
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your balance is: </div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.balance, true)}</div>                 
-                </div>
-              </div>
-              <div className="graph-container">
-                {graph}
-              </div>
-              
-            </div>  
-
-            
+            </div>         
+            {this.renderResultSection()}         
           </div>
-
         </main>
         <footer>
-
-        </footer>
-         
+            This is not a legal advice. For advice regarding your taxes please conslut your CPA.
+        </footer>         
       </div>
     );
   }
 
+
   calculateTaxes(){
-    console.log("calculating taxes");
+    logger.log("calculating taxes");
     //update taxModel and recalculate
     if(!this.taxModel.hasTheSameState(this.state)){      
-      this.taxModel.updateState(this.state);
+      
       this.taxModel.recalculate();
+      //update state and as callback function upate state of the model (using callback to make sure we pass updated state)
       this.setState({
-        balance : this.taxModel.balance,
-        totalIncome: this.taxModel.totalIncome,
-        AGI: this.taxModel.totalTaxableIncome,
-        totalTaxWithheld: this.taxModel.totalTaxesWithheld,
-        totalTaxDue: this.taxModel.totalTaxDue,
-      });
+          balance : this.taxModel.balance,
+          totalIncome: this.taxModel.totalIncome,
+          AGI: this.taxModel.totalTaxableIncome,
+          totalTaxWithheld: this.taxModel.totalTaxesWithheld,
+          totalTaxDue: this.taxModel.totalTaxDue,
+        },function(){
+          this.taxModel.updateState(this.state);
+        }        
+      );
+      //update graph data
+      this.generateDataSetForGraph(this.taxModel);
     }
-    
-    
-    //update graph data
-    this.generateDataSetForGraph();
   }
 
 
@@ -421,134 +352,71 @@ class App extends React.Component {
       </div>
     );
   }
-  
-  renderGraph(){
-     
-    var graphDataSetTaxDue = this.state.graphDataSetTaxDue;
-    var graphDataSetNetIncome = this.state.graphDataSetNetIncome;
-
-   return (
-      <VictoryChart
-        domainPadding={{x: [0, 0], y: [0, 5]}}
-        containerComponent={
-          <VictoryVoronoiContainer           
-            labels={({ datum }) => `Gross Income: $${datum.x}, \n ${datum.description} $${datum.y}`}
-            labelComponent={
-              <VictoryTooltip  dy={-7} constrainToVisibleArea />
-            }
-          />
-        }
-      >
-        <VictoryLegend x={120} y={10}
-          orientation="horizontal"
-          gutter={20}
-          style={{ border: { stroke: colors.primaryDarkColor } }}
-          colorScale={[ colors.primaryLightColor, colors.secondaryLightColor]}
-          data={[
-            { name: "Tax Due" }, { name: "Net Income" }
-          ]}
-        />
-
-        <VictoryAxis crossAxis
-          label='Gross Income'
-          style={{
-            axis: {stroke: colors.primaryDarkColor},
-            axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor},
-            tickLabels: {fontSize: 12, padding: 8, fill: colors.primaryDarkColor},
-            grid: {
-              stroke: ({ tick }) => tick > 50000 ? colors.secondaryDarkColor : colors.primaryDarkColor ,
-              opacity: 0.5,
-              strokeDasharray: "10, 5",
-            }            
-          }}
-        />
-
-        <VictoryAxis dependentAxis crossAxis
-          //label='Amount [$]'
-          style={{
-            axis: {stroke: colors.primaryDarkColor},
-            axisLabel: {fontSize: 16, padding: 30, fill: colors.primaryDarkColor},
-            tickLabels: {fontSize: 12, padding: 8, fill: colors.primaryDarkColor},
-            grid: {
-              stroke: colors.primaryDarkColor, 
-              opacity: 0.5,
-              strokeDasharray: "10, 5",
-            }
-          }}
-        />
-        
-        
-
-        
-        <VictoryArea
-          name = "Net Income"
-          interpolation="catmullRom"
-          data={graphDataSetNetIncome}
-          style={{
-            data: { stroke: colors.secondaryColor, fill: colors.secondaryLightColor, opacity: 0.75, }
-          }}
-          //draw the line - animation
-          animate={{
-            duration: 500,
-            onLoad: { duration: 1000 }
-          }}
-        />
-
-        <VictoryArea
-            name = "series-1"
-            interpolation="catmullRom"
-            data={graphDataSetTaxDue}
-            style={{
-              data: { stroke: colors.primaryColor , fill: colors.primaryLightColor, opacity: 0.75, }
-            }}
-            //draw the line - animation
-            animate={{
-              duration: 500,
-              onLoad: { duration: 1000 }
-            }}
-        />
-
-        {this.state.balance < 0 &&
-        //render only if balance is larger then zero - to avoid poorly looking graph
-        <VictoryScatter
-          symbol="star"
-          size={7}
-          style={{ data: { 
-            stroke: colors.primaryColor , 
-            fill: colors.primaryLightColor,
-            strokeWidth: 2
-            } }}
-          data = {[{ x: this.state.totalIncome, y: this.state.totalTaxDue  }]}        
-        />
-        }
-
-        {this.state.balance < 0 &&
-        //render only if balance is larger then zero - to avoid poorly looking graph
-        <VictoryScatter
-          symbol="star"
-          size={7}
-          style={{ data: { 
-            stroke: colors.secondaryColor, 
-            fill: colors.secondaryLightColor,
-            strokeWidth: 2
-            } }}
-          data = {[{ x: this.state.totalIncome, y: this.state.totalIncome - this.state.totalTaxDue }]}        
-        />
-        }
 
 
-      </VictoryChart>
-   )
-      
+  renderResultSection(){
+    var resultMessage = ""
+    if(this.state.balance > 0){
+      resultMessage =  `CONGRATULATIONS! Your estimated refund is: ${utils.convertToCurrency(this.state.balance)}`;
+    }
+    else if(this.state.balance < 0){
+      resultMessage = `Looks like you will owe ${utils.convertToCurrency(this.state.balance)} in taxes.`;
+    }
+    else{
+      resultMessage = "Looks like you will be all square! Nothing to pay, but no refund either...";
+    }
+
+    return(
+      <div id="results-container">
+              <div id="results-container-header">RESULTS</div>
+              <div id="results-container-content">
+                <div className="results-row results-message">
+                {resultMessage}
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your total wages:</div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalIncome, true)}</div>
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your adjusted gross income:</div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.AGI, true)}</div>
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your total taxes withheld:</div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxWithheld, true)}</div>
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your total taxes due: </div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxDue, true)}</div>
+                </div>
+                <div className="results-row">
+                  <div className="results-row-label">Your balance is: </div>
+                  <div className="results-row-value">{utils.convertToCurrency(this.state.balance, true)}</div>
+                </div>
+              </div>
+              <div className="graph-container">
+                <GraphRenderer 
+                  graphDataSetTaxDue={this.state.graphDataSetTaxDue} 
+                  graphDataSetNetIncome={this.state.graphDataSetNetIncome }  
+                  balance={this.state.balance}
+                  totalIncome={this.state.totalIncome}
+                  totalTaxDue={this.state.totalTaxDue}
+                />
+              </div>
+            </div>
+
+
+    );
   }
 
-  generateDataSetForGraph(){
+  //Generates data sets for Graph 
+  generateDataSetForGraph(currentTaxModel){
     //$10,000 as increment/decreament
     const INCREMENT = 10000; 
     //Graph points to the left (and right) from the user set value for gross income 
     const NUM_OF_GRAPH_POINTS_TO_LEFT = 5;
     const NUM_OF_GRAPH_POINTS_TO_RIGHT = 5;
-    console.log("Generating dataset for graph...");
+    logger.log("Generating dataset for graph...");
     let datasetTaxDue = [];
     let datasetNetIncome = [];
     //clone the model
@@ -574,7 +442,7 @@ class App extends React.Component {
       }
     }
     startPointIncome = Math.floor(startPointIncome / INCREMENT) * INCREMENT;
-    console.log("Start point income is: " + startPointIncome);
+    logger.log("Start point income is: " + startPointIncome);
 
     /*
     Go from start point income to endpoint income (from point most to the left to point most ot the right)
@@ -589,27 +457,32 @@ class App extends React.Component {
           model.setWages(currentIncome);
           model.recalculate();
           let taxesDue = Math.floor(model.getTotalTaxDue());
-          console.log("Adding datapoint. Values: taxes due: " + taxesDue + ", current income: " + currentIncome);
+          logger.log("Adding datapoint. Values: taxes due: " + taxesDue + ", current income: " + currentIncome);
           if(taxesDue > 0){
             //only add to points to display if tax due has positive value
             datasetTaxDue.push({x: currentIncome, y: taxesDue, description: "Tax Due"});
             datasetNetIncome.push({x: currentIncome, y: currentIncome-taxesDue, description: "Net Income"});
           }
-          //add values for user entered data if they are within inverval of this and next iteration
-          if(currentIncome < this.state.totalIncome && currentIncome + INCREMENT > this.state.totalIncome){
-            datasetTaxDue.push({x: this.state.totalIncome, y: Math.floor(this.state.totalTaxDue), description: "Tax Due"});
-            datasetNetIncome.push({x: this.state.totalIncome, y:  Math.floor(this.state.totalIncome - this.state.totalTaxDue), description: "Net Income"});
+          /*
+          add values for user entered data if they are within inverval of this and next iteration
+          Need to use values from this.taxModel, because state may have not updated and it may contain old value
+          */
+          if(currentIncome < this.taxModel.totalIncome && currentIncome + INCREMENT > this.taxModel.totalIncome){
+            datasetTaxDue.push({x:  this.taxModel.totalIncome, y: Math.floor(this.taxModel.totalTaxDue), description: "Tax Due"});
+            datasetNetIncome.push({x:  this.taxModel.totalIncome, y:  Math.floor(this.taxModel.totalIncome - this.taxModel.totalTaxDue), description: "Net Income"});
           }
         }
     }    
 
     this.setState({
-      graphDataSetTaxDue: datasetTaxDue,
-      graphDataSetNetIncome: datasetNetIncome
-    });
+        graphDataSetTaxDue: datasetTaxDue,
+        graphDataSetNetIncome: datasetNetIncome
+      },
+      function(){
+        this.taxModel.updateState(this.state);
+      }      
+    );
   }
-
-
 }
 
 

@@ -18,10 +18,6 @@ const CONSTANTS = {
         YES: "Yes",
         NO: "No"
     }
-
-    
-
-
 }
 
 export default CONSTANTS;
