@@ -12,7 +12,7 @@ render(){
 
    return (
       <VictoryChart
-        domainPadding={{x: [0, 0], y: [0, 5]}}
+        domainPadding={{x: [0.5, 0.5], y: [0, 5]}}
         containerComponent={
           <VictoryVoronoiContainer           
             labels={({ datum }) => `Gross Income: $${datum.x}, \n ${datum.description} $${datum.y}`}
@@ -101,7 +101,7 @@ render(){
             fill: colors.primaryLightColor,
             strokeWidth: 2
             } }}
-          data = {[{ x: this.props.totalIncome, y: this.props.totalTaxDue, description: "Current Tax Due:"  }]}        
+          data = {[{ x: this.props.totalIncome, y: Math.floor(this.props.totalTaxDue), description: "Current Tax Due:"  }]}        
         />
         }
 
@@ -115,7 +115,7 @@ render(){
             fill: colors.secondaryLightColor,
             strokeWidth: 2
             } }}
-          data = {[{ x: this.props.totalIncome, y: this.props.totalIncome - this.props.totalTaxDue, description: "Current Net Income:" }]}        
+          data = {[{ x: this.props.totalIncome, y: Math.floor(this.props.totalIncome - this.props.totalTaxDue), description: "Current Net Income:" }]}        
         />
         }
 

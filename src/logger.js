@@ -1,6 +1,6 @@
 //Logging wrapper for regular logs. Warnings and errors shoudl be displayed in regular way
 //to activate via browser console enter: window.debugMode = true
-window.debugMode = false;
+window.debugMode = true;
 var log = function(){
     if(window.debugMode){
         console.log.apply(console, arguments);

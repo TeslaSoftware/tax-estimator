@@ -110,6 +110,7 @@ class App extends React.Component {
       balance: 0,
       graphDataSetTaxDue: [],
       graphDataSetNetIncome: [],
+      
     }
     this.changeFilingStatus = this.changeFilingStatus.bind(this);
     this.changeDeductionMode = this.changeDeductionMode.bind(this);
@@ -129,7 +130,12 @@ class App extends React.Component {
     //this.generateResultsSection =  this.generateResultsSection.bind(this);
     
     
-    this.taxModel = new taxModel2019(this.state);
+    this.taxModel = new taxModel2019();
+    this.taxModel.initFromState(this.state);
+  }
+
+  setTaxModelVariablesFromState(){
+
   }
 
   changeFilingStatus(event){
@@ -148,6 +154,12 @@ class App extends React.Component {
     this.setState({
       dependantsClaimStatus: event.target.value
     });
+    if(this.state.dependantsClaimStatus === CONSTANTS.DEPENDANTS_CLAIM_STATUS.NO){
+      this.setState({
+        numberOfDependantChildren: "0",       
+        numberOfDependantRelatives: "0", 
+      });
+    }    
   }
 
 
@@ -156,6 +168,11 @@ class App extends React.Component {
     this.setState({
       itemizedDeductionValue: formattedValue
     });
+    if(this.state.deductionMode === CONSTANTS.DEDUCTION_MODE.STANDARD){
+      this.setState({
+        itemizedDeductionValue: "$0",
+      });
+    }
   }
 
   changeWages(event){
@@ -264,23 +281,22 @@ class App extends React.Component {
 
   calculateTaxes(){
     logger.log("calculating taxes");
-    //update taxModel and recalculate
-    if(!this.taxModel.hasTheSameState(this.state)){      
-      
-      this.taxModel.recalculate();
-      //update state and as callback function upate state of the model (using callback to make sure we pass updated state)
-      this.setState({
-          balance : this.taxModel.balance,
-          totalIncome: this.taxModel.totalIncome,
-          AGI: this.taxModel.totalTaxableIncome,
-          totalTaxWithheld: this.taxModel.totalTaxesWithheld,
-          totalTaxDue: this.taxModel.totalTaxDue,
-        },function(){
-          this.taxModel.updateState(this.state);
-        }        
-      );
+    let newTaxModel = new taxModel2019();
+    newTaxModel.initFromState(this.state);
+    //update taxModel and recalculate - if there was a change in basic variables
+    if(!this.taxModel.hasTheSameInitialState(newTaxModel)){      
+      newTaxModel.recalculate();
       //update graph data
-      this.generateDataSetForGraph(this.taxModel);
+      this.generateDataSetForGraph(newTaxModel);
+      this.setState({
+          balance : newTaxModel.balance,
+          totalIncome: newTaxModel.totalIncome,
+          AGI: newTaxModel.taxableIncome,
+          totalTaxWithheld: newTaxModel.totalTaxesWithheld,
+          totalTaxDue: newTaxModel.totalTaxDue,
+        }    
+      );
+      this.taxModel = newTaxModel;
     }
   }
 
@@ -307,12 +323,13 @@ class App extends React.Component {
     return(
       <div>
         <RadioGroup id="dependants-claim-status-main-container"  radioGroupData={dependantsClaimStatusRadioData} currentValue={this.state.dependantsClaimStatus} handleChange={this.changeDependantsClaimStatus} />
-          {//Render only if dependants claim status is yes
-            this.state.dependantsClaimStatus === CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES &&
+          {//Render only if dependants claim status is yes, else if selected no then rest variables for children and relatives
+            this.state.dependantsClaimStatus === CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES ?
             <div className="dependants-number-main-container">
               <InputNumber id="dependants-number-children-container" name="input-dependants-number-children" description="Number of qualifying children: " inputId="input-dependants-number-children" onChange={this.changeNumberOfDependantChildren} value={this.state.numberOfDependantChildren}  maxValue={10}/>  
               <InputNumber id="dependants-number-relatives-container" name="input-dependants-number-relatives" description="Number of qualifying relatives: " inputId="input-dependants-number-relatives" onChange={this.changeNumberOfDependantRelatives} value={this.state.numberOfDependantRelatives}  maxValue={10}/>  
             </div>
+            :null
           }
       </div>
     );
@@ -368,44 +385,42 @@ class App extends React.Component {
 
     return(
       <div id="results-container">
-              <div id="results-container-header">RESULTS</div>
-              <div id="results-container-content">
-                <div className="results-row results-message">
-                {resultMessage}
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your total wages:</div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalIncome, true)}</div>
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your adjusted gross income:</div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.AGI, true)}</div>
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your total taxes withheld:</div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxWithheld, true)}</div>
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your total taxes due: </div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxDue, true)}</div>
-                </div>
-                <div className="results-row">
-                  <div className="results-row-label">Your balance is: </div>
-                  <div className="results-row-value">{utils.convertToCurrency(this.state.balance, true)}</div>
-                </div>
-              </div>
-              <div className="graph-container">
-                <GraphRenderer 
-                  graphDataSetTaxDue={this.state.graphDataSetTaxDue} 
-                  graphDataSetNetIncome={this.state.graphDataSetNetIncome }  
-                  balance={this.state.balance}
-                  totalIncome={this.state.totalIncome}
-                  totalTaxDue={this.state.totalTaxDue}
-                />
-              </div>
+        <div id="results-container-header">RESULTS</div>
+        <div id="results-container-content">
+          <div className="results-row results-message">
+          {resultMessage}
+          </div>
+          <div className="results-row">
+            <div className="results-row-label">Your total wages:</div>
+            <div className="results-row-value">{utils.convertToCurrency(this.state.totalIncome, true)}</div>
+          </div>
+            <div className="results-row">
+              <div className="results-row-label">Your adjusted gross income:</div>
+              <div className="results-row-value">{utils.convertToCurrency(this.state.AGI, true)}</div>
             </div>
-
-
+            <div className="results-row">
+              <div className="results-row-label">Your total taxes withheld:</div>
+              <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxWithheld, true)}</div>
+            </div>
+            <div className="results-row">
+              <div className="results-row-label">Your total taxes due: </div>
+              <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxDue, true)}</div>
+            </div>
+            <div className="results-row">
+              <div className="results-row-label">Your balance is: </div>
+              <div className="results-row-value">{utils.convertToCurrency(this.state.balance, true)}</div>
+            </div>
+          </div>
+          <div className="graph-container">
+            <GraphRenderer 
+              graphDataSetTaxDue={this.state.graphDataSetTaxDue} 
+              graphDataSetNetIncome={this.state.graphDataSetNetIncome }  
+              balance={this.state.balance}
+              totalIncome={this.state.totalIncome}
+              totalTaxDue={this.state.totalTaxDue}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -420,12 +435,11 @@ class App extends React.Component {
     let datasetTaxDue = [];
     let datasetNetIncome = [];
     //clone the model
-    let model = new taxModel2019(this.state);
+    let model = currentTaxModel.clone();
     //need to recalculate first so all the variables are set (and you can get reliable value for total)
     model.recalculate();
     let income = model.getTotalIncome();
    
-
     /*
     Get start point income for graph point (point with value all the way to the left)
     Start point income should be more than zero (i.e. cannot be negtive).
@@ -467,20 +481,23 @@ class App extends React.Component {
           add values for user entered data if they are within inverval of this and next iteration
           Need to use values from this.taxModel, because state may have not updated and it may contain old value
           */
-          if(currentIncome < this.taxModel.totalIncome && currentIncome + INCREMENT > this.taxModel.totalIncome){
-            datasetTaxDue.push({x:  this.taxModel.totalIncome, y: Math.floor(this.taxModel.totalTaxDue), description: "Tax Due"});
-            datasetNetIncome.push({x:  this.taxModel.totalIncome, y:  Math.floor(this.taxModel.totalIncome - this.taxModel.totalTaxDue), description: "Net Income"});
+          if(currentIncome < currentTaxModel.totalIncome && currentIncome + INCREMENT > this.taxModel.totalIncome){
+            logger.log("Adding datapoint. Values: taxes due: " + currentTaxModel.totalTaxDue + ", total income: " + currentTaxModel.totalIncome);
+            datasetTaxDue.push({x:  currentTaxModel.totalIncome, y: Math.floor(currentTaxModel.totalTaxDue), description: "Tax Due"});
+            datasetNetIncome.push({x:  currentTaxModel.totalIncome, y:  Math.floor(currentTaxModel.totalIncome - currentTaxModel.totalTaxDue), description: "Net Income"});
           }
         }
     }    
+    if(datasetTaxDue.length == 1 || datasetNetIncome.length == 1){
+      //if there is only one data point then its insufficient to produce the graph. Clear the datasets, so we display blank graph instead of haphazar one.
+      datasetTaxDue = [];
+      datasetNetIncome = [];
+    }
 
     this.setState({
         graphDataSetTaxDue: datasetTaxDue,
         graphDataSetNetIncome: datasetNetIncome
-      },
-      function(){
-        this.taxModel.updateState(this.state);
-      }      
+      }   
     );
   }
 }

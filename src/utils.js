@@ -3,6 +3,8 @@
 helper functions
 */
 
+import { instanceOf } from "prop-types";
+
 export function convertToCurrency(value, allowNegativeValues){
   //console.log("convertToCurrency() received value " + value);
     value = value.toString();
@@ -64,7 +66,13 @@ export function convertToValidNumber(event){
 
   export function convertStringToNumber(value){
     if(value === "") return 0;
-    // remove all characters that aren't digit
-    value = value.replace(/[^0-9]/g,'');  
-    return parseFloat(value);
+    //check if value is number
+    if(typeof value == "number"){
+      return value;
+    }
+    if(typeof value == "string"){
+      // remove all characters that aren't digit
+      value = value.replace(/[^0-9]/g,'');  
+      return parseFloat(value);
+    }
   }
