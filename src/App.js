@@ -1,87 +1,19 @@
 import React from 'react';
 import './App.scss';
-import InputNumber from './InputNumber';
-import RadioGroup from './RadioGroup';
 import DataEntrySection from './DataEntrySection';
+import SectionContentDeductionMode from './SectionContentDeductionMode';
+import SectionContentDependants from './SectionContentDependants';
+import SectionContentFilingStatus from './SectionContentFilingStatus';
+import SectionContentW2 from './SectionContentW2';
+
 import CONSTANTS from './constants';
 import * as utils from './utils';
-import taxModel2019 from './taxModel2019';
-import GraphRenderer from './GraphRenderer';
 import * as logger from './logger';
 
-
-var deductionModeRadioData = {
-  groupName: "deduction-mode",
-  description: "Which deduction mode you want to use?",
-  items: [
-    {
-      value: CONSTANTS.DEDUCTION_MODE.STANDARD,
-      description: "Standard Deduction"
-    },
-    {
-      value: CONSTANTS.DEDUCTION_MODE.ITEMIZED,
-      description: "Itemized Deduction"
-    },
-  ]
-};
-
-
-var filingStatusRadioData = {
-  groupName: "filing-status",
-  description: "What is your filing status?",
-  items: [
-    {
-      value: CONSTANTS.FILING_STATUS_VALUE.SINGLE,
-      description: "Single"
-    },
-    {
-      value: CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY,
-      description: "Married filing jointly"
-    },
-    {
-      value: CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_SEPERATELY,
-      description: "Married filing separately"
-    },
-    {
-      value: CONSTANTS.FILING_STATUS_VALUE.HEAD_OF_HOUSEHOLD,
-      description: "Head of household"
-    },
-    {
-      value: CONSTANTS.FILING_STATUS_VALUE.QUALIFIED_WIDOW,
-      description: "Qualifying widow(er)"
-    },
-  ]
-};
-
-var dependantsClaimStatusRadioData = {
-  groupName: "dependants-claim-status",
-  description: "Do you have depenedants to claim?",
-  items: [
-    {
-      value: CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES,
-      description: "Yes"
-    },
-    {
-      value: CONSTANTS.DEPENDANTS_CLAIM_STATUS.NO,
-      description: "No"
-    }
-  ]
-}
-
-var otherDeductionsStatusRadioData = {
-  groupName: "other-deductions-status",
-  description: "Do you have any other deductions/tax credits?",
-  items: [
-    {
-      value: CONSTANTS.OTHER_DEDUCTIONS_STATUS.YES,
-      description: "Yes"
-    },
-    {
-      value: CONSTANTS.OTHER_DEDUCTIONS_STATUS.NO,
-      description: "No"
-    }
-  ]
-}
+import taxModel2019 from './taxModel2019';
+import GraphRenderer from './GraphRenderer';
+import SectionContentOtherDeductions from './SectionContentOtherDeductions';
+import TaxResultsContainer from './TaxResultsContainer';
 
 class App extends React.Component {
 
@@ -127,9 +59,8 @@ class App extends React.Component {
     this.changeOtherDeductionsStatus = this.changeOtherDeductionsStatus.bind(this);
     this.calculateTaxes = this.calculateTaxes.bind(this);
     this.generateDataSetForGraph = this.generateDataSetForGraph.bind(this);
-    //this.generateResultsSection =  this.generateResultsSection.bind(this);
     
-    
+    //non-state variables and objects
     this.taxModel = new taxModel2019();
     this.taxModel.initFromState(this.state);
   }
@@ -243,8 +174,7 @@ class App extends React.Component {
 
   
   render(){    
-    //here you can add logic
-   
+    //here you can add logic   
 
     return (
       <div className="App">
@@ -260,15 +190,71 @@ class App extends React.Component {
               //develop unit tests
             }
           
-            <DataEntrySection sectionName="FILING STATUS" sectionContent={this.generateFilingStatusSectionContent()} />
-            <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={this.generateDeductionModeSectionContent()} />
-            <DataEntrySection sectionName="DEPENDANTS" sectionContent={this.generateDedepndantsSectionContent()} />            
-            <DataEntrySection sectionName="W2 INFO" sectionContent={this.generateW2SEctionContent()} />            
-            <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={this.generateOtherDeductionsSectionContent()} />
+            <DataEntrySection sectionName="FILING STATUS" sectionContent={
+              <SectionContentFilingStatus
+                filingStatus = {this.state.filingStatus}
+                changeFilingStatus = {this.changeFilingStatus}
+              />
+              } 
+            />
+            <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={
+              //this.generateDeductionModeSectionContent()
+              <SectionContentDeductionMode
+                deductionMode = {this.state.deductionMode}
+                changeDeductionMode = {this.changeDeductionMode}
+                changeItemizedDeduction = {this.changeItemizedDeduction}
+                itemizedDeductionValue = {this.state.itemizedDeductionValue}
+              />} 
+            />
+            <DataEntrySection sectionName="DEPENDANTS" sectionContent={
+              //this.generateDedepndantsSectionContent()
+              <SectionContentDependants 
+                dependantsClaimStatus = {this.state.dependantsClaimStatus}
+                changeDependantsClaimStatus = {this.changeDependantsClaimStatus}
+                changeNumberOfDependantChildren = {this.changeNumberOfDependantChildren}
+                numberOfDependantChildren = {this.state.numberOfDependantChildren}
+                changeNumberOfDependantRelatives = {this.changeNumberOfDependantRelatives}
+                numberOfDependantRelatives = {this.state.numberOfDependantRelatives}
+              />
+              } 
+            />            
+            <DataEntrySection sectionName="W2 INFO" sectionContent={
+              <SectionContentW2 
+                changeWages = {this.changeWages}
+                wages = {this.state.wages}
+                changeTaxWithhold = {this.changeTaxWithhold}
+                taxWithhold = {this.state.taxWithhold}
+                filingStatus = {this.state.filingStatus}
+                changeWagesSpouse = {this.changeWagesSpouse}
+                wagesSpouse = {this.state.wagesSpouse}
+                changeTaxWithholdSpouse = {this.changeTaxWithholdSpouse}
+                taxWithholdSpouse = {this.state.taxWithholdSpouse}
+              />
+              } 
+            />            
+            <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={
+              <SectionContentOtherDeductions
+                otherDeductionsStatus = {this.state.otherDeductionsStatus}
+                changeOtherDeductionsStatus = {this.changeOtherDeductionsStatus}
+                preTaxDeductions = {this.state.preTaxDeductions}
+                changePreTaxDeductions = {this.changePreTaxDeductions}
+                taxCreditsDeductions = {this.state.taxCreditsDeductions}
+                changeTaxCreditsDeductions = {this.changeTaxCreditsDeductions}
+              />
+              } 
+            />
             <div id="controls-container">
               <button onClick={this.calculateTaxes}>CALCULATE</button>
             </div>         
-            {this.renderResultSection()}         
+            <TaxResultsContainer 
+              balance = {this.state.balance}
+              totalIncome = {this.state.totalIncome}
+              AGI = {this.state.AGI}
+              totalTaxWithheld = {this.state.totalTaxWithheld}
+              totalTaxDue = {this.state.totalTaxDue}
+              graphDataSetTaxDue = {this.state.graphDataSetTaxDue}
+              graphDataSetNetIncome = {this.state.graphDataSetNetIncome}            
+            />   
           </div>
         </main>
         <footer>
@@ -300,24 +286,31 @@ class App extends React.Component {
     }
   }
 
-
-  generateFilingStatusSectionContent(){
-    return(
-      <RadioGroup id="filing-status-main-container" radioGroupData={filingStatusRadioData} currentValue={this.state.filingStatus} handleChange={this.changeFilingStatus} />
-    );
-  }
-
+  /*
   generateDeductionModeSectionContent(){
     return(
       <div>
-        <RadioGroup id="deduction-mode-main-container" radioGroupData={deductionModeRadioData} currentValue={this.state.deductionMode} handleChange={this.changeDeductionMode} />
+          <RadioGroup 
+          id="deduction-mode-main-container" 
+          radioGroupData={deductionModeRadioData} 
+          currentValue={this.state.deductionMode} 
+          handleChange={this.changeDeductionMode} 
+          />
           { //Render only if itemized deduction is selected
             this.state.deductionMode === CONSTANTS.DEDUCTION_MODE.ITEMIZED &&
-            <InputNumber id="itemized-deduction-container" name="input-itemized-deduction" description="Itemized deduction value: " inputId="input-itemized-deduction" onChange={this.changeItemizedDeduction} value={this.state.itemizedDeductionValue} isCurrency={true}/>  
+            <InputNumber 
+              id="itemized-deduction-container" 
+              name="input-itemized-deduction" 
+              description="Itemized deduction value: " 
+              inputId="input-itemized-deduction" 
+              onChange={this.changeItemizedDeduction} 
+              value={this.state.itemizedDeductionValue} 
+              isCurrency={true}/>  
           }
       </div>
     );
   }
+
   
   generateDedepndantsSectionContent(){
     return(
@@ -334,6 +327,8 @@ class App extends React.Component {
       </div>
     );
   }
+
+
 
   generateW2SEctionContent(){
     return(
@@ -354,7 +349,7 @@ class App extends React.Component {
     );
   }
 
-  generateOtherDeductionsSectionContent(){
+   generateOtherDeductionsSectionContent(){
     return(
       <div>
         <RadioGroup id="other-deductions-status-main-container" radioGroupData={otherDeductionsStatusRadioData} currentValue={this.state.otherDeductionsStatus} handleChange={this.changeOtherDeductionsStatus} />
@@ -369,6 +364,7 @@ class App extends React.Component {
       </div>
     );
   }
+   
 
 
   renderResultSection(){
@@ -424,6 +420,8 @@ class App extends React.Component {
     );
   }
 
+   */
+
   //Generates data sets for Graph 
   generateDataSetForGraph(currentTaxModel){
     //$10,000 as increment/decreament
@@ -463,6 +461,7 @@ class App extends React.Component {
     Place results in an array of objects, where each object has x and y values.
     X is gross income, Y is taxes due.
     */
+    let addedCurrentIncome = false;
     let endPointIncome = startPointIncome + ((NUM_OF_GRAPH_POINTS_TO_LEFT + NUM_OF_GRAPH_POINTS_TO_RIGHT) * INCREMENT);
     for(let currentIncome = startPointIncome; currentIncome <= endPointIncome ; currentIncome += INCREMENT){
         //for sake of calculation assume that entire income comes from primary wages and spouse did not have income
@@ -481,8 +480,9 @@ class App extends React.Component {
           add values for user entered data if they are within inverval of this and next iteration
           Need to use values from this.taxModel, because state may have not updated and it may contain old value
           */
-          if(currentIncome < currentTaxModel.totalIncome && currentIncome + INCREMENT > this.taxModel.totalIncome){
+          if(!addedCurrentIncome && currentIncome < currentTaxModel.totalIncome && currentIncome + INCREMENT > this.taxModel.totalIncome){
             logger.log("Adding datapoint. Values: taxes due: " + currentTaxModel.totalTaxDue + ", total income: " + currentTaxModel.totalIncome);
+            addedCurrentIncome = true;
             datasetTaxDue.push({x:  currentTaxModel.totalIncome, y: Math.floor(currentTaxModel.totalTaxDue), description: "Tax Due"});
             datasetNetIncome.push({x:  currentTaxModel.totalIncome, y:  Math.floor(currentTaxModel.totalIncome - currentTaxModel.totalTaxDue), description: "Net Income"});
           }
