@@ -5,15 +5,16 @@ import SectionContentDeductionMode from './SectionContentDeductionMode';
 import SectionContentDependants from './SectionContentDependants';
 import SectionContentFilingStatus from './SectionContentFilingStatus';
 import SectionContentW2 from './SectionContentW2';
+import SectionContentOtherDeductions from './SectionContentOtherDeductions';
+import TaxResultsContainer from './TaxResultsContainer';
 
 import CONSTANTS from './constants';
 import * as utils from './utils';
 import * as logger from './logger';
 
+import graphDataSetGenerator from './graphDataSetGenerator';
 import taxModel2019 from './taxModel2019';
-import GraphRenderer from './GraphRenderer';
-import SectionContentOtherDeductions from './SectionContentOtherDeductions';
-import TaxResultsContainer from './TaxResultsContainer';
+
 
 class App extends React.Component {
 
@@ -63,10 +64,6 @@ class App extends React.Component {
     //non-state variables and objects
     this.taxModel = new taxModel2019();
     this.taxModel.initFromState(this.state);
-  }
-
-  setTaxModelVariablesFromState(){
-
   }
 
   changeFilingStatus(event){
@@ -253,7 +250,8 @@ class App extends React.Component {
               totalTaxWithheld = {this.state.totalTaxWithheld}
               totalTaxDue = {this.state.totalTaxDue}
               graphDataSetTaxDue = {this.state.graphDataSetTaxDue}
-              graphDataSetNetIncome = {this.state.graphDataSetNetIncome}            
+              graphDataSetNetIncome = {this.state.graphDataSetNetIncome}  
+              messageForNonRefundableTaxCredits = {this.state.messageForNonRefundableTaxCredits}          
             />   
           </div>
         </main>
@@ -273,154 +271,21 @@ class App extends React.Component {
     if(!this.taxModel.hasTheSameInitialState(newTaxModel)){      
       newTaxModel.recalculate();
       //update graph data
-      this.generateDataSetForGraph(newTaxModel);
+      let dataForGraphs = graphDataSetGenerator(newTaxModel);
       this.setState({
           balance : newTaxModel.balance,
           totalIncome: newTaxModel.totalIncome,
           AGI: newTaxModel.taxableIncome,
           totalTaxWithheld: newTaxModel.totalTaxesWithheld,
           totalTaxDue: newTaxModel.totalTaxDue,
+          graphDataSetTaxDue: dataForGraphs.datasetTaxDue,
+          graphDataSetNetIncome: dataForGraphs.datasetNetIncome,
+          messageForNonRefundableTaxCredits: newTaxModel.getMessageForNonRefundableTaxCredits(),
         }    
       );
       this.taxModel = newTaxModel;
     }
   }
-
-  /*
-  generateDeductionModeSectionContent(){
-    return(
-      <div>
-          <RadioGroup 
-          id="deduction-mode-main-container" 
-          radioGroupData={deductionModeRadioData} 
-          currentValue={this.state.deductionMode} 
-          handleChange={this.changeDeductionMode} 
-          />
-          { //Render only if itemized deduction is selected
-            this.state.deductionMode === CONSTANTS.DEDUCTION_MODE.ITEMIZED &&
-            <InputNumber 
-              id="itemized-deduction-container" 
-              name="input-itemized-deduction" 
-              description="Itemized deduction value: " 
-              inputId="input-itemized-deduction" 
-              onChange={this.changeItemizedDeduction} 
-              value={this.state.itemizedDeductionValue} 
-              isCurrency={true}/>  
-          }
-      </div>
-    );
-  }
-
-  
-  generateDedepndantsSectionContent(){
-    return(
-      <div>
-        <RadioGroup id="dependants-claim-status-main-container"  radioGroupData={dependantsClaimStatusRadioData} currentValue={this.state.dependantsClaimStatus} handleChange={this.changeDependantsClaimStatus} />
-          {//Render only if dependants claim status is yes, else if selected no then rest variables for children and relatives
-            this.state.dependantsClaimStatus === CONSTANTS.DEPENDANTS_CLAIM_STATUS.YES ?
-            <div className="dependants-number-main-container">
-              <InputNumber id="dependants-number-children-container" name="input-dependants-number-children" description="Number of qualifying children: " inputId="input-dependants-number-children" onChange={this.changeNumberOfDependantChildren} value={this.state.numberOfDependantChildren}  maxValue={10}/>  
-              <InputNumber id="dependants-number-relatives-container" name="input-dependants-number-relatives" description="Number of qualifying relatives: " inputId="input-dependants-number-relatives" onChange={this.changeNumberOfDependantRelatives} value={this.state.numberOfDependantRelatives}  maxValue={10}/>  
-            </div>
-            :null
-          }
-      </div>
-    );
-  }
-
-
-
-  generateW2SEctionContent(){
-    return(
-      <div id="w2-info-container">
-        <div id="w2-your-info" className="w2-info"> YOUR W-2
-          <InputNumber id="wages-container" name="input-wages" description="Wages, tips and compensation: " inputId="input-wages" onChange={this.changeWages} value={this.state.wages} isCurrency={true}/>  
-          <InputNumber id="tax-withhold-container" name="input-tax-withhold" description="Federal tax withhold: " inputId="input-tax-withhold" onChange={this.changeTaxWithhold} value={this.state.taxWithhold} isCurrency={true}/>  
-        </div>
-          {
-            //Render only if married filing jointlty
-            this.state.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY &&
-            <div id="w2-spouse-info" className="w2-info"> SPOUSE W-2
-              <InputNumber id="wages-spouse-container" name="input-wages-spouse" description="Wages, tips and compensation: " inputId="input-wages-spouse" onChange={this.changeWagesSpouse} value={this.state.wagesSpouse} isCurrency={true}/>  
-              <InputNumber id="tax-withhold-spouse-container" name="input-tax-withhold-spouse" description="Federal tax withhold: " inputId="input-tax-withhold-spouse" onChange={this.changeTaxWithholdSpouse} value={this.state.taxWithholdSpouse} isCurrency={true}/>  
-            </div>                
-          }              
-      </div>
-    );
-  }
-
-   generateOtherDeductionsSectionContent(){
-    return(
-      <div>
-        <RadioGroup id="other-deductions-status-main-container" radioGroupData={otherDeductionsStatusRadioData} currentValue={this.state.otherDeductionsStatus} handleChange={this.changeOtherDeductionsStatus} />
-          {//Render only if other deduction are selected
-          this.state.otherDeductionsStatus === CONSTANTS.OTHER_DEDUCTIONS_STATUS.YES &&
-          <div id="other-deductions-main-container">
-            <div className="container-label">Enter other deductions/tax credits:</div>
-            <InputNumber id="pre-tax-deductions-container" name="input-pre-tax-deductions" description="Other pre-tax deductions: " inputId="input-pre-tax-deductions" onChange={this.changePreTaxDeductions} value={this.state.preTaxDeductions} isCurrency={true}/>  
-            <InputNumber id="tax-credits-deductions-container" name="input-tax-credits-deductions" description="Tax credits: " inputId="input-tax-credits-deductions" onChange={this.changeTaxCreditsDeductions} value={this.state.taxCreditsDeductions} isCurrency={true}/>  
-          </div>
-        }  
-      </div>
-    );
-  }
-   
-
-
-  renderResultSection(){
-    var resultMessage = ""
-    if(this.state.balance > 0){
-      resultMessage =  `CONGRATULATIONS! Your estimated refund is: ${utils.convertToCurrency(this.state.balance)}`;
-    }
-    else if(this.state.balance < 0){
-      resultMessage = `Looks like you will owe ${utils.convertToCurrency(this.state.balance)} in taxes.`;
-    }
-    else{
-      resultMessage = "Looks like you will be all square! Nothing to pay, but no refund either...";
-    }
-
-    return(
-      <div id="results-container">
-        <div id="results-container-header">RESULTS</div>
-        <div id="results-container-content">
-          <div className="results-row results-message">
-          {resultMessage}
-          </div>
-          <div className="results-row">
-            <div className="results-row-label">Your total wages:</div>
-            <div className="results-row-value">{utils.convertToCurrency(this.state.totalIncome, true)}</div>
-          </div>
-            <div className="results-row">
-              <div className="results-row-label">Your adjusted gross income:</div>
-              <div className="results-row-value">{utils.convertToCurrency(this.state.AGI, true)}</div>
-            </div>
-            <div className="results-row">
-              <div className="results-row-label">Your total taxes withheld:</div>
-              <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxWithheld, true)}</div>
-            </div>
-            <div className="results-row">
-              <div className="results-row-label">Your total taxes due: </div>
-              <div className="results-row-value">{utils.convertToCurrency(this.state.totalTaxDue, true)}</div>
-            </div>
-            <div className="results-row">
-              <div className="results-row-label">Your balance is: </div>
-              <div className="results-row-value">{utils.convertToCurrency(this.state.balance, true)}</div>
-            </div>
-          </div>
-          <div className="graph-container">
-            <GraphRenderer 
-              graphDataSetTaxDue={this.state.graphDataSetTaxDue} 
-              graphDataSetNetIncome={this.state.graphDataSetNetIncome }  
-              balance={this.state.balance}
-              totalIncome={this.state.totalIncome}
-              totalTaxDue={this.state.totalTaxDue}
-          />
-        </div>
-      </div>
-    );
-  }
-
-   */
 
   //Generates data sets for Graph 
   generateDataSetForGraph(currentTaxModel){
@@ -488,7 +353,7 @@ class App extends React.Component {
           }
         }
     }    
-    if(datasetTaxDue.length == 1 || datasetNetIncome.length == 1){
+    if(datasetTaxDue.length === 1 || datasetNetIncome.length === 1){
       //if there is only one data point then its insufficient to produce the graph. Clear the datasets, so we display blank graph instead of haphazar one.
       datasetTaxDue = [];
       datasetNetIncome = [];

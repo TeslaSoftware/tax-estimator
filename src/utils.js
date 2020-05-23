@@ -3,8 +3,6 @@
 helper functions
 */
 
-import { instanceOf } from "prop-types";
-
 export function convertToCurrency(value, allowNegativeValues){
   //console.log("convertToCurrency() received value " + value);
     value = value.toString();

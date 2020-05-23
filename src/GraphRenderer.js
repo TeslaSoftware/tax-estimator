@@ -1,6 +1,6 @@
 import React from 'react';
 import colors from './colors';
-import {VictoryChart, VictoryLine, VictoryVoronoiContainer, VictoryLegend, VictoryAxis, VictoryGroup, VictoryScatter, VictoryTooltip, VictoryArea, VictoryTheme} from 'victory'
+import {VictoryChart, VictoryVoronoiContainer, VictoryLegend, VictoryAxis, VictoryScatter, VictoryTooltip, VictoryArea, } from 'victory'
 
 
 class GraphRenderer extends React.Component{

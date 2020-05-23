@@ -13,6 +13,8 @@ export default function(props){
     else{
       resultMessage = "Looks like you will be all square! Nothing to pay, but no refund either...";
     }
+    //Render only if absolute value of balance is different than absolute value of tax due
+    var renderMessageForNonRefundableTaxCredits =  (Math.abs(props.balance) < Math.abs(props.totalTaxDue)) ;
 
     return(
       <div id="results-container">
@@ -39,8 +41,22 @@ export default function(props){
             </div>
             <div className="results-row">
               <div className="results-row-label">Your balance is: </div>
-              <div className="results-row-value">{utils.convertToCurrency(props.balance, true)}</div>
+              {
+                renderMessageForNonRefundableTaxCredits ?
+                  <div className="results-row-value">{utils.convertToCurrency(props.balance, true)}*</div>
+                :
+                  <div className="results-row-value">{utils.convertToCurrency(props.balance, true)}</div>
+              }
             </div>
+            { renderMessageForNonRefundableTaxCredits ?
+                    <div className="results-row">
+                        <div className="messageForNonRefundableTaxCredits">
+                            *{props.messageForNonRefundableTaxCredits}
+                        </div>
+                    </div>
+                :null
+            }
+            
           </div>
           <div className="graph-container">
             <GraphRenderer 

@@ -2,7 +2,6 @@ import * as utils from './utils';
 import CONSTANTS from './constants';
 import taxBrackets from './taxBrackets2019';
 import * as logger from './logger';
-import { instanceOf } from 'prop-types';
 
 var keysForNumericProperties = ['numberOfDependantChildren', 'numberOfDependantRelatives', 
     'itemizedDeductionValue', 'wages', 'taxWithhold', 'wagesSpouse', 'taxWithholdSpouse', 'preTaxDeductions', 'taxCreditsDeductions'];
@@ -322,6 +321,8 @@ class taxModel2019{
         return result;
     }
 
-
+    getMessageForNonRefundableTaxCredits(){
+        return "In tax year 2019 only tax credits for dependant children are refundable up to $1400 per each child. Therefore your expected refund (negative value of total tax due) and actual refund (balance) are different."
+    }
 }
 export default taxModel2019;
