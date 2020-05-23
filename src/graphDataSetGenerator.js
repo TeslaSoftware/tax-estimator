@@ -20,8 +20,6 @@ let graphDataSetGenerator = function(currentTaxModel){
     const NUM_OF_GRAPH_POINTS_TO_LEFT = 5;
     const NUM_OF_GRAPH_POINTS_TO_RIGHT = 5;
     logger.log("Generating dataset for graph...");
-    let datasetTaxDue = [];
-    let datasetNetIncome = [];
     //clone the model
     let model = currentTaxModel.clone();
     //need to recalculate first so all the variables are set (and you can get reliable value for total)
@@ -62,32 +60,30 @@ let graphDataSetGenerator = function(currentTaxModel){
             let taxesDue = Math.floor(model.getTotalTaxDue());
             logger.log("Adding datapoint. Values: taxes due: " + taxesDue + ", current income: " + currentIncome);
             if(taxesDue > 0){
-            //only add to points to display if tax due has positive value
-            datasetTaxDue.push({x: currentIncome, y: taxesDue, description: "Tax Due"});
-            datasetNetIncome.push({x: currentIncome, y: currentIncome-taxesDue, description: "Net Income"});
+                //only add to points to display if tax due has positive value
+                objectToReturn.datasetTaxDue.push({x: currentIncome, y: taxesDue, description: "Tax Due"});
+                objectToReturn.datasetNetIncome.push({x: currentIncome, y: currentIncome-taxesDue, description: "Net Income"});
             }
             /*
             add values for user entered data if they are within inverval of this and next iteration
             Need to use values from this.taxModel, because state may have not updated and it may contain old value
             */
             if(!addedCurrentIncome && currentIncome < currentTaxModel.totalIncome && currentIncome + INCREMENT > currentTaxModel.totalIncome){
-            logger.log("Adding datapoint. Values: taxes due: " + currentTaxModel.totalTaxDue + ", total income: " + currentTaxModel.totalIncome);
-            addedCurrentIncome = true;
-            datasetTaxDue.push({x:  currentTaxModel.totalIncome, y: Math.floor(currentTaxModel.totalTaxDue), description: "Tax Due"});
-            datasetNetIncome.push({x:  currentTaxModel.totalIncome, y:  Math.floor(currentTaxModel.totalIncome - currentTaxModel.totalTaxDue), description: "Net Income"});
+                logger.log("Adding datapoint. Values: taxes due: " + currentTaxModel.totalTaxDue + ", total income: " + currentTaxModel.totalIncome);
+                addedCurrentIncome = true;
+                objectToReturn.datasetTaxDue.push({x:  currentTaxModel.totalIncome, y: Math.floor(currentTaxModel.totalTaxDue), description: "Tax Due"});
+                objectToReturn.datasetNetIncome.push({x:  currentTaxModel.totalIncome, y:  Math.floor(currentTaxModel.totalIncome - currentTaxModel.totalTaxDue), description: "Net Income"});
             }
         }
     }    
-    if(datasetTaxDue.length === 1 || datasetNetIncome.length === 1){
+    if(objectToReturn.datasetTaxDue.length === 1 || objectToReturn.datasetNetIncome.length === 1){
         //if there is only one data point then its insufficient to produce the graph. Clear the datasets, so we display blank graph instead of haphazar one.
-        datasetTaxDue = [];
-        datasetNetIncome = [];
+        objectToReturn.datasetTaxDue = [];
+        objectToReturn.datasetNetIncome = [];
+        return objectToReturn;
     }
 
-
     //return object containing objects with datapoint for graph
-    objectToReturn.datasetTaxDue = datasetTaxDue;
-    objectToReturn.datasetNetIncome = datasetNetIncome;
     return objectToReturn;
 }
 
