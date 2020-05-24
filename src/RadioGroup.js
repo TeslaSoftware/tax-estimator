@@ -24,7 +24,7 @@ function RadioGroup(props){
     return (
     <div id={props.id} className={props.className}>
         <div className={props.radioGroupData.groupName + "-group-label radio-group-label"}>{props.radioGroupData.description}</div>
-        <div id={props.radioGroupData.groupName + "-group-label-items-wrapper"} >
+        <div id={props.radioGroupData.groupName + "-group-label-items-wrapper"} className="radio-group-radio-items-wrapper">
         {radiosAndLabels} 
         </div>
     </div>)

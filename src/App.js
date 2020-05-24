@@ -20,7 +20,37 @@ class App extends React.Component {
 
   constructor(props){
     super(props);
-    this.state ={
+
+    //set constants - in future they can be specified for each tax model year
+    this.startScreenValue = 0;
+    this.endScreenValue = 5;
+
+    this.state = this.getInitialState();
+    this.changeFilingStatus = this.changeFilingStatus.bind(this);
+    this.changeDeductionMode = this.changeDeductionMode.bind(this);
+    this.changeItemizedDeduction = this.changeItemizedDeduction.bind(this);    
+    this.changeDependantsClaimStatus = this.changeDependantsClaimStatus.bind(this);
+    this.changeNumberOfDependantChildren = this.changeNumberOfDependantChildren.bind(this);
+    this.changeNumberOfDependantRelatives = this.changeNumberOfDependantRelatives.bind(this);
+    this.changeWages = this.changeWages.bind(this);
+    this.changeTaxWithhold = this.changeTaxWithhold.bind(this);
+    this.changeWagesSpouse = this.changeWagesSpouse.bind(this);
+    this.changeTaxWithholdSpouse = this.changeTaxWithholdSpouse.bind(this);
+    this.changePreTaxDeductions = this.changePreTaxDeductions.bind(this);
+    this.changeTaxCreditsDeductions = this.changeTaxCreditsDeductions.bind(this);
+    this.changeOtherDeductionsStatus = this.changeOtherDeductionsStatus.bind(this);
+    this.resetApp = this.resetApp.bind(this);
+    //this.changeCurrentScreenValue = this.changeCurrentScreenValue.bind(this);
+    this.calculateTaxes = this.calculateTaxes.bind(this);
+    
+    //non-state variables and objects    
+    this.taxModel = new taxModel2019();
+    this.taxModel.initFromState(this.state);
+  }
+
+  //method returning object used for setting initial state and reseting the app
+  getInitialState(){
+    return {
       filingStatus: CONSTANTS.FILING_STATUS_VALUE.SINGLE,
       deductionMode: CONSTANTS.DEDUCTION_MODE.STANDARD,
       //Need to use input value as String instead of number. This is because of React bug 9402->https://github.com/facebook/react/issues/9402
@@ -43,27 +73,14 @@ class App extends React.Component {
       balance: 0,
       graphDataSetTaxDue: [],
       graphDataSetNetIncome: [],
-      
+      currentScreen : this.startScreenValue,      
     }
-    this.changeFilingStatus = this.changeFilingStatus.bind(this);
-    this.changeDeductionMode = this.changeDeductionMode.bind(this);
-    this.changeItemizedDeduction = this.changeItemizedDeduction.bind(this);    
-    this.changeDependantsClaimStatus = this.changeDependantsClaimStatus.bind(this);
-    this.changeNumberOfDependantChildren = this.changeNumberOfDependantChildren.bind(this);
-    this.changeNumberOfDependantRelatives = this.changeNumberOfDependantRelatives.bind(this);
-    this.changeWages = this.changeWages.bind(this);
-    this.changeTaxWithhold = this.changeTaxWithhold.bind(this);
-    this.changeWagesSpouse = this.changeWagesSpouse.bind(this);
-    this.changeTaxWithholdSpouse = this.changeTaxWithholdSpouse.bind(this);
-    this.changePreTaxDeductions = this.changePreTaxDeductions.bind(this);
-    this.changeTaxCreditsDeductions = this.changeTaxCreditsDeductions.bind(this);
-    this.changeOtherDeductionsStatus = this.changeOtherDeductionsStatus.bind(this);
-    this.calculateTaxes = this.calculateTaxes.bind(this);
-    this.generateDataSetForGraph = this.generateDataSetForGraph.bind(this);
-    
-    //non-state variables and objects
-    this.taxModel = new taxModel2019();
-    this.taxModel.initFromState(this.state);
+  }
+
+  resetApp(){
+    this.setState(
+      this.getInitialState()
+    );
   }
 
   changeFilingStatus(event){
@@ -169,9 +186,30 @@ class App extends React.Component {
     });
   }
 
+  changeCurrentScreenValue(newScreenValue){
+    //calculate taxes when you are on the last screen
+    if(newScreenValue === this.endScreenValue){
+      this.calculateTaxes();
+    }    
+
+    //update currentScreen variable
+    if(newScreenValue >= this.startScreenValue && newScreenValue <= this.endScreenValue){
+      this.setState({
+        currentScreen: newScreenValue,
+      })
+    }
+    else{
+      console.warn("Thwarted attempt to set newScreenValue that would exceeed maxScreenValue (in respect to screen number)");
+    }    
+  }
+
   
   render(){    
-    //here you can add logic   
+    let sectionsArray = this.generateArrayOfScreenSections();
+    let sectionToDisplay = sectionsArray[this.state.currentScreen];
+    let shouldRenderPrevButton = this.state.currentScreen > this.startScreenValue;
+    let shoudlRenderNextButton = this.state.currentScreen < this.endScreenValue;
+    
 
     return (
       <div className="App">
@@ -186,73 +224,25 @@ class App extends React.Component {
               //use state variable to keep track on which screen you are and render only that section.You can add all section to an array and display only current index section.
               //develop unit tests
             }
-          
-            <DataEntrySection sectionName="FILING STATUS" sectionContent={
-              <SectionContentFilingStatus
-                filingStatus = {this.state.filingStatus}
-                changeFilingStatus = {this.changeFilingStatus}
-              />
-              } 
-            />
-            <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={
-              //this.generateDeductionModeSectionContent()
-              <SectionContentDeductionMode
-                deductionMode = {this.state.deductionMode}
-                changeDeductionMode = {this.changeDeductionMode}
-                changeItemizedDeduction = {this.changeItemizedDeduction}
-                itemizedDeductionValue = {this.state.itemizedDeductionValue}
-              />} 
-            />
-            <DataEntrySection sectionName="DEPENDANTS" sectionContent={
-              //this.generateDedepndantsSectionContent()
-              <SectionContentDependants 
-                dependantsClaimStatus = {this.state.dependantsClaimStatus}
-                changeDependantsClaimStatus = {this.changeDependantsClaimStatus}
-                changeNumberOfDependantChildren = {this.changeNumberOfDependantChildren}
-                numberOfDependantChildren = {this.state.numberOfDependantChildren}
-                changeNumberOfDependantRelatives = {this.changeNumberOfDependantRelatives}
-                numberOfDependantRelatives = {this.state.numberOfDependantRelatives}
-              />
-              } 
-            />            
-            <DataEntrySection sectionName="W2 INFO" sectionContent={
-              <SectionContentW2 
-                changeWages = {this.changeWages}
-                wages = {this.state.wages}
-                changeTaxWithhold = {this.changeTaxWithhold}
-                taxWithhold = {this.state.taxWithhold}
-                filingStatus = {this.state.filingStatus}
-                changeWagesSpouse = {this.changeWagesSpouse}
-                wagesSpouse = {this.state.wagesSpouse}
-                changeTaxWithholdSpouse = {this.changeTaxWithholdSpouse}
-                taxWithholdSpouse = {this.state.taxWithholdSpouse}
-              />
-              } 
-            />            
-            <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={
-              <SectionContentOtherDeductions
-                otherDeductionsStatus = {this.state.otherDeductionsStatus}
-                changeOtherDeductionsStatus = {this.changeOtherDeductionsStatus}
-                preTaxDeductions = {this.state.preTaxDeductions}
-                changePreTaxDeductions = {this.changePreTaxDeductions}
-                taxCreditsDeductions = {this.state.taxCreditsDeductions}
-                changeTaxCreditsDeductions = {this.changeTaxCreditsDeductions}
-              />
-              } 
-            />
+            {
+              sectionToDisplay
+            }
             <div id="controls-container">
-              <button onClick={this.calculateTaxes}>CALCULATE</button>
-            </div>         
-            <TaxResultsContainer 
-              balance = {this.state.balance}
-              totalIncome = {this.state.totalIncome}
-              AGI = {this.state.AGI}
-              totalTaxWithheld = {this.state.totalTaxWithheld}
-              totalTaxDue = {this.state.totalTaxDue}
-              graphDataSetTaxDue = {this.state.graphDataSetTaxDue}
-              graphDataSetNetIncome = {this.state.graphDataSetNetIncome}  
-              messageForNonRefundableTaxCredits = {this.state.messageForNonRefundableTaxCredits}          
-            />   
+              {
+                shouldRenderPrevButton &&
+                  <button onClick={() => this.changeCurrentScreenValue(this.state.currentScreen -1) } className="unselectable">PREVIOUS</button>
+              }
+              {
+                shoudlRenderNextButton &&
+                  <button onClick={() => this.changeCurrentScreenValue(this.state.currentScreen +1) } className="unselectable"> {this.state.currentScreen === this.endScreenValue-1 ? "CALCULATE" : "NEXT"} </button>
+              }
+              {
+                this.state.currentScreen === this.endScreenValue &&
+                  <button onClick={this.resetApp } className="unselectable"> RESET </button>
+              }
+              
+            </div>        
+               
           </div>
         </main>
         <footer>
@@ -266,14 +256,125 @@ class App extends React.Component {
     );
   }
 
+  generateArrayOfScreenSections(){
+    if(this.taxModel.getTaxYear() === 2019){
+      return this.generateArrayOfScreenSectionsTaxYear2019();
+    }
+    else{
+      console.error("Unknwon tax model. ")
+    }
+  }
 
-  calculateTaxes(){
-    logger.log("calculating taxes");
+  generateArrayOfScreenSectionsTaxYear2019(){
+    let arrayOfSections = [];
+    arrayOfSections.push(this.getFilingStatusSection());
+    arrayOfSections.push(this.getDeductionModeSection());
+    arrayOfSections.push(this.getDependantsSection());
+    arrayOfSections.push(this.getW2Section());
+    arrayOfSections.push(this.getOtherDeductionsSection());
+    arrayOfSections.push(this.getTaxResultsContainer());
+    return arrayOfSections;
+  }
+
+  getFilingStatusSection(){
+    return(
+      <DataEntrySection sectionName="FILING STATUS" sectionContent={
+        <SectionContentFilingStatus
+          filingStatus = {this.state.filingStatus}
+          changeFilingStatus = {this.changeFilingStatus}
+        />
+        } 
+      />
+    );
+  }
+
+  getDeductionModeSection(){
+    return(
+      <DataEntrySection sectionName="DEDUCTION TYPE" sectionContent={
+        <SectionContentDeductionMode
+          deductionMode = {this.state.deductionMode}
+          changeDeductionMode = {this.changeDeductionMode}
+          changeItemizedDeduction = {this.changeItemizedDeduction}
+          itemizedDeductionValue = {this.state.itemizedDeductionValue}
+        />
+        } 
+      />
+    );
+  }
+
+  getDependantsSection(){
+    return(
+      <DataEntrySection sectionName="DEPENDANTS" sectionContent={
+        <SectionContentDependants 
+          dependantsClaimStatus = {this.state.dependantsClaimStatus}
+          changeDependantsClaimStatus = {this.changeDependantsClaimStatus}
+          changeNumberOfDependantChildren = {this.changeNumberOfDependantChildren}
+          numberOfDependantChildren = {this.state.numberOfDependantChildren}
+          changeNumberOfDependantRelatives = {this.changeNumberOfDependantRelatives}
+          numberOfDependantRelatives = {this.state.numberOfDependantRelatives}
+        />
+        } 
+      /> 
+    );
+  }
+
+  getW2Section(){
+    return(
+      <DataEntrySection sectionName="W2 INFO" sectionContent={
+        <SectionContentW2 
+          changeWages = {this.changeWages}
+          wages = {this.state.wages}
+          changeTaxWithhold = {this.changeTaxWithhold}
+          taxWithhold = {this.state.taxWithhold}
+          filingStatus = {this.state.filingStatus}
+          changeWagesSpouse = {this.changeWagesSpouse}
+          wagesSpouse = {this.state.wagesSpouse}
+          changeTaxWithholdSpouse = {this.changeTaxWithholdSpouse}
+          taxWithholdSpouse = {this.state.taxWithholdSpouse}
+        />
+        } 
+      /> 
+    );
+  }
+
+  getOtherDeductionsSection(){
+    return(
+      <DataEntrySection sectionName="OTHER DEDUCTIONS" sectionContent={
+        <SectionContentOtherDeductions
+          otherDeductionsStatus = {this.state.otherDeductionsStatus}
+          changeOtherDeductionsStatus = {this.changeOtherDeductionsStatus}
+          preTaxDeductions = {this.state.preTaxDeductions}
+          changePreTaxDeductions = {this.changePreTaxDeductions}
+          taxCreditsDeductions = {this.state.taxCreditsDeductions}
+          changeTaxCreditsDeductions = {this.changeTaxCreditsDeductions}
+        />
+        } 
+      />
+    );
+  }
+
+  getTaxResultsContainer(){
+    return(
+      <TaxResultsContainer 
+        balance = {this.state.balance}
+        totalIncome = {this.state.totalIncome}
+        AGI = {this.state.AGI}
+        totalTaxWithheld = {this.state.totalTaxWithheld}
+        totalTaxDue = {this.state.totalTaxDue}
+        graphDataSetTaxDue = {this.state.graphDataSetTaxDue}
+        graphDataSetNetIncome = {this.state.graphDataSetNetIncome}  
+        messageForNonRefundableTaxCredits = {this.state.messageForNonRefundableTaxCredits}          
+      />
+    );
+  }
+
+  calculateTaxes(){    
     let newTaxModel = new taxModel2019();
     newTaxModel.initFromState(this.state);
     //update taxModel and recalculate - if there was a change in basic variables
     if(!this.taxModel.hasTheSameInitialState(newTaxModel)){      
       newTaxModel.recalculate();
+      logger.log("calculateTaxes() method called. newTaxModel has totalincome: " + newTaxModel.getTotalIncome() + ", tax due: " + newTaxModel.getTotalTaxDue());
       //update graph data
       let dataForGraphs = graphDataSetGenerator(newTaxModel);
       this.setState({
@@ -291,84 +392,6 @@ class App extends React.Component {
     }
   }
 
-  //Generates data sets for Graph 
-  generateDataSetForGraph(currentTaxModel){
-    //$10,000 as increment/decreament
-    const INCREMENT = 10000; 
-    //Graph points to the left (and right) from the user set value for gross income 
-    const NUM_OF_GRAPH_POINTS_TO_LEFT = 5;
-    const NUM_OF_GRAPH_POINTS_TO_RIGHT = 5;
-    logger.log("Generating dataset for graph...");
-    let datasetTaxDue = [];
-    let datasetNetIncome = [];
-    //clone the model
-    let model = currentTaxModel.clone();
-    //need to recalculate first so all the variables are set (and you can get reliable value for total)
-    model.recalculate();
-    let income = model.getTotalIncome();
-   
-    /*
-    Get start point income for graph point (point with value all the way to the left)
-    Start point income should be more than zero (i.e. cannot be negtive).
-    */
-    let startPointIncome =  income;
-    for(let iter = NUM_OF_GRAPH_POINTS_TO_LEFT; iter >0 ; iter--){
-      let candidateForStartPointIncome = startPointIncome - INCREMENT;
-      if(candidateForStartPointIncome > 0){
-        startPointIncome = candidateForStartPointIncome
-      }
-      else{
-        //we already at zero or less - may as well break out of the loop
-        break;
-      }
-    }
-    startPointIncome = Math.floor(startPointIncome / INCREMENT) * INCREMENT;
-    logger.log("Start point income is: " + startPointIncome);
-
-    /*
-    Go from start point income to endpoint income (from point most to the left to point most ot the right)
-    Place results in an array of objects, where each object has x and y values.
-    X is gross income, Y is taxes due.
-    */
-    let addedCurrentIncome = false;
-    let endPointIncome = startPointIncome + ((NUM_OF_GRAPH_POINTS_TO_LEFT + NUM_OF_GRAPH_POINTS_TO_RIGHT) * INCREMENT);
-    for(let currentIncome = startPointIncome; currentIncome <= endPointIncome ; currentIncome += INCREMENT){
-        //for sake of calculation assume that entire income comes from primary wages and spouse did not have income
-        if(currentIncome > 0){
-          model.setWagesSpouse(0);
-          model.setWages(currentIncome);
-          model.recalculate();
-          let taxesDue = Math.floor(model.getTotalTaxDue());
-          logger.log("Adding datapoint. Values: taxes due: " + taxesDue + ", current income: " + currentIncome);
-          if(taxesDue > 0){
-            //only add to points to display if tax due has positive value
-            datasetTaxDue.push({x: currentIncome, y: taxesDue, description: "Tax Due"});
-            datasetNetIncome.push({x: currentIncome, y: currentIncome-taxesDue, description: "Net Income"});
-          }
-          /*
-          add values for user entered data if they are within inverval of this and next iteration
-          Need to use values from this.taxModel, because state may have not updated and it may contain old value
-          */
-          if(!addedCurrentIncome && currentIncome < currentTaxModel.totalIncome && currentIncome + INCREMENT > this.taxModel.totalIncome){
-            logger.log("Adding datapoint. Values: taxes due: " + currentTaxModel.totalTaxDue + ", total income: " + currentTaxModel.totalIncome);
-            addedCurrentIncome = true;
-            datasetTaxDue.push({x:  currentTaxModel.totalIncome, y: Math.floor(currentTaxModel.totalTaxDue), description: "Tax Due"});
-            datasetNetIncome.push({x:  currentTaxModel.totalIncome, y:  Math.floor(currentTaxModel.totalIncome - currentTaxModel.totalTaxDue), description: "Net Income"});
-          }
-        }
-    }    
-    if(datasetTaxDue.length === 1 || datasetNetIncome.length === 1){
-      //if there is only one data point then its insufficient to produce the graph. Clear the datasets, so we display blank graph instead of haphazar one.
-      datasetTaxDue = [];
-      datasetNetIncome = [];
-    }
-
-    this.setState({
-        graphDataSetTaxDue: datasetTaxDue,
-        graphDataSetNetIncome: datasetNetIncome
-      }   
-    );
-  }
 }
 
 

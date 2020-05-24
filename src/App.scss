@@ -42,8 +42,22 @@ body{
   
 }
 
+.unselectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 .App {
   text-align: center;
+  min-height: 100vh;
+  //position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .App-logo {
@@ -59,9 +73,6 @@ body{
 
 .App-header {  
   background: $secondary-color;  
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   font-size: 2rem;
   font-family: 'Lato', sans-serif;
   text-shadow: 0.1rem 0.1rem 0.1rem $secondary-dark-color;
@@ -72,16 +83,20 @@ body{
   position: fixed;
   width: 100%;
   z-index: 10;
+  top: 0;
 }
 
 main{
   display: flex;
   justify-content: center;
   padding-top: 2rem;
+  /*Padding bottom to accomodate footer - no matter the size of the content of main */
+  flex-grow: 1;
 }
 
 #main-container{
   margin: 1rem;
+  align-self: center;
   & > div{
     margin: 1rem;
   }
@@ -145,10 +160,18 @@ main{
 
 }
 
-#filing-status-group-label-items-wrapper{
+/*Render radios as columns for more coherent UI and better UX*/
+.radio-group-radio-items-wrapper{
   display: flex;
   flex-wrap: wrap;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  & .radio-group-item{
+    text-align: left;
+  }
 }
+
 
 .radio-group-item{
   display: inline-block;
@@ -271,7 +294,7 @@ label, input, .radio-group-item, .radio-group-label, .container-label{
   align-items: center;
   label{
     text-align: right;
-    width: 50%;
+    flex: 1 1 0px;
   }
   input{
     text-align: left;
@@ -289,12 +312,17 @@ label, input, .radio-group-item, .radio-group-label, .container-label{
   flex: 1;
 }
 
+.w2-info-header{
+  font-weight: 700;
+}
+
 
 button{
   position: relative;
   overflow: hidden;
   border: none;
   border-radius: 0.3rem;
+  margin: 1rem;
   padding: 1rem;
   background-color: $secondary-color;
   color: $on-secondary-color;
@@ -317,7 +345,7 @@ button{
 }
 
 #controls-container{
-  padding: 2rem;
+  padding: 1rem;
 }
 
 
@@ -325,6 +353,8 @@ button{
   max-width: 30rem;
   padding-top: 1rem;
   font-weight: 700;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .messageForNonRefundableTaxCredits{
@@ -334,7 +364,7 @@ button{
 }
 
 .graph-container{
-  max-width: 700px;
+  max-width: 40rem;
   margin-left: auto;
   margin-right: auto;
   padding: 1rem;
@@ -343,22 +373,22 @@ button{
 
 footer{
   background-color: $secondary-dark-color;
-  color: $on-secondary-color;
-  font-size: 0.7rem;
+  color: $on-secondary-dark-color;
+  font-size: 0.65rem;
+  //position: absolute;
+  bottom: 0;
+  width: 100%;
 }
 
-/*Render radios as columns for more coherent UI and better UX*/
-@media only screen and (max-width: 1200px) {
-  #filing-status-group-label-items-wrapper{
+
+@media only screen and (max-width: 900px) {
+  #w2-info-container{
     flex-direction: column;
-    align-content: center;
-    justify-content: center;
-    & .radio-group-item{
-      text-align: left;
+    .w2-info{
+      margin: 1rem 0;
     }
   }
 }
-
 
 @media only screen and (max-width: 450px) {
   .input-text-number-container{

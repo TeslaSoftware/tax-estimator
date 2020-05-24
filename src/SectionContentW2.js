@@ -6,7 +6,8 @@ import InputNumber from './InputNumber';
 export default function(props){
     return(
         <div id="w2-info-container">
-          <div id="w2-your-info" className="w2-info"> YOUR W-2
+          <div id="w2-your-info" className="w2-info"> 
+            <div className="w2-info-header">YOUR W-2</div>
             <InputNumber 
                 id="wages-container" 
                 name="input-wages" 
@@ -29,7 +30,8 @@ export default function(props){
             {
               //Render only if married filing jointlty
               props.filingStatus === CONSTANTS.FILING_STATUS_VALUE.MARRIED_FILING_JOINTLY &&
-              <div id="w2-spouse-info" className="w2-info"> SPOUSE W-2
+              <div id="w2-spouse-info" className="w2-info"> 
+                <div className="w2-info-header">SPOUSE W-2</div>
                 <InputNumber 
                     id="wages-spouse-container" 
                     name="input-wages-spouse" 

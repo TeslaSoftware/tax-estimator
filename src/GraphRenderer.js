@@ -13,6 +13,12 @@ render(){
    return (
       <VictoryChart
         domainPadding={{x: [0.5, 0.5], y: [0, 5]}}
+        padding={{
+          left: 50, 
+          right: 25,
+          bottom: 25,
+          top: 50,
+        }}
         containerComponent={
           <VictoryVoronoiContainer           
             labels={({ datum }) => `Gross Income: $${datum.x}, \n ${datum.description} $${datum.y}`}

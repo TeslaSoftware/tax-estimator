@@ -12,7 +12,8 @@ var keysForInitialProperties = ['numberOfDependantChildren', 'numberOfDependantR
 'taxCreditsDeductions', 'filingStatus', 'deductionMode', 'dependantsClaimStatus', 'otherDeductionsStatus'];
 
 //keys for valid state properties, that are not used by model
-var keysForExcludedProperties = ['totalIncome', 'AGI', 'totalTaxWithheld', 'totalTaxDue', 'balance', 'graphDataSet', 'graphDataSetTaxDue', 'graphDataSetNetIncome' ];
+var keysForExcludedProperties = ['totalIncome', 'AGI', 'totalTaxWithheld', 'totalTaxDue', 'balance', 'graphDataSet', 
+'graphDataSetTaxDue', 'graphDataSetNetIncome', 'currentScreen', 'messageForNonRefundableTaxCredits' ];
 
 
 
@@ -38,6 +39,9 @@ dependantsTaxCredit.relative = 500;
 class taxModel2019{            
     
     constructor(){
+        //fixed variables indentifying model
+        this.taxYear = 2019;
+
         //basic variables used for calculations
         this.wages = 0;
         this.wagesSpouse = 0;
@@ -128,6 +132,11 @@ class taxModel2019{
     getWages(){ return this.wages; }
 
     getWagesSpouse(){ return this.wagesSpouse; }
+
+    //this will be in the future interface method
+    getTaxYear(){
+        return this.taxYear;
+    }
 
 
     /*
