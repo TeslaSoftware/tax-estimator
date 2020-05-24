@@ -58,6 +58,12 @@ export default function(props){
             }
             
           </div>
+          <div className="results-row">
+            <div id="graph-label">
+              Graph showing projections of your net income and taxes due based on changes in gross income.
+            </div>
+          </div>
+          
           <div className="graph-container">
             <GraphRenderer 
               graphDataSetTaxDue={props.graphDataSetTaxDue} 

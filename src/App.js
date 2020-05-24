@@ -256,7 +256,11 @@ class App extends React.Component {
           </div>
         </main>
         <footer>
-            This is not a legal advice. For advice regarding your taxes please conslut your CPA.
+            This is not a tax advice regarding filing your tax returns. This webapplication provides only estimate. 
+            <br/>
+            For advice regarding your taxes please conslut your CPA.
+            <br/>
+            Sebastian Tysler 2020©
         </footer>         
       </div>
     );

@@ -145,6 +145,11 @@ main{
 
 }
 
+#filing-status-group-label-items-wrapper{
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .radio-group-item{
   display: inline-block;
   margin: 0 1rem;
@@ -203,21 +208,6 @@ input[type=radio] {
   background-color: $primary-light-color ; 
   opacity: 0;
 }
-
-/*
-input[type=radio]:checked + .radio-look:after {
-  content: "\2713";
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  color:white;
-  position: absolute;
-  font-size: 0.9rem;
-}
-*/
-
-
 
 input[type=radio]:checked {
   + .radio-look:before{
@@ -330,6 +320,19 @@ button{
   padding: 2rem;
 }
 
+
+#graph-label{
+  max-width: 30rem;
+  padding-top: 1rem;
+  font-weight: 700;
+}
+
+.messageForNonRefundableTaxCredits{
+  max-width: 30rem;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
 .graph-container{
   max-width: 700px;
   margin-left: auto;
@@ -337,8 +340,38 @@ button{
   padding: 1rem;
 }
 
-.messageForNonRefundableTaxCredits{
-  max-width: 30rem;
-  text-align: left;
-  font-size: 0.8rem;
+
+footer{
+  background-color: $secondary-dark-color;
+  color: $on-secondary-color;
+  font-size: 0.7rem;
+}
+
+/*Render radios as columns for more coherent UI and better UX*/
+@media only screen and (max-width: 1200px) {
+  #filing-status-group-label-items-wrapper{
+    flex-direction: column;
+    align-content: center;
+    justify-content: center;
+    & .radio-group-item{
+      text-align: left;
+    }
+  }
+}
+
+
+@media only screen and (max-width: 450px) {
+  .input-text-number-container{
+    flex-direction: column;
+    & label{
+      width: auto;
+      text-align: center;
+    }
+  }
+}
+
+@media only screen and (max-width: 350px) {
+  .App-header{
+    font-size: 1.5rem;
+  }
 }
