@@ -1,22 +1,22 @@
 {
   "files": {
-    "main.css": "/tax-estimator/static/css/main.99535029.chunk.css",
-    "main.js": "/tax-estimator/static/js/main.a66b1ddf.chunk.js",
-    "main.js.map": "/tax-estimator/static/js/main.a66b1ddf.chunk.js.map",
+    "main.css": "/tax-estimator/static/css/main.671a5bf7.chunk.css",
+    "main.js": "/tax-estimator/static/js/main.affada10.chunk.js",
+    "main.js.map": "/tax-estimator/static/js/main.affada10.chunk.js.map",
     "runtime-main.js": "/tax-estimator/static/js/runtime-main.1d1fdf95.js",
     "runtime-main.js.map": "/tax-estimator/static/js/runtime-main.1d1fdf95.js.map",
     "static/js/2.8d42ef4e.chunk.js": "/tax-estimator/static/js/2.8d42ef4e.chunk.js",
     "static/js/2.8d42ef4e.chunk.js.map": "/tax-estimator/static/js/2.8d42ef4e.chunk.js.map",
     "index.html": "/tax-estimator/index.html",
-    "precache-manifest.36e688623f8d4850db4e61a3bd0969a0.js": "/tax-estimator/precache-manifest.36e688623f8d4850db4e61a3bd0969a0.js",
+    "precache-manifest.d3f811728a0ace51e8816c642a847051.js": "/tax-estimator/precache-manifest.d3f811728a0ace51e8816c642a847051.js",
     "service-worker.js": "/tax-estimator/service-worker.js",
-    "static/css/main.99535029.chunk.css.map": "/tax-estimator/static/css/main.99535029.chunk.css.map",
+    "static/css/main.671a5bf7.chunk.css.map": "/tax-estimator/static/css/main.671a5bf7.chunk.css.map",
     "static/js/2.8d42ef4e.chunk.js.LICENSE.txt": "/tax-estimator/static/js/2.8d42ef4e.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.1d1fdf95.js",
     "static/js/2.8d42ef4e.chunk.js",
-    "static/css/main.99535029.chunk.css",
-    "static/js/main.a66b1ddf.chunk.js"
+    "static/css/main.671a5bf7.chunk.css",
+    "static/js/main.affada10.chunk.js"
   ]
 }
