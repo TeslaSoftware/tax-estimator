@@ -1,6 +1,7 @@
 {
     "short_name": "Tax Estimator",
     "name": "Estimate your tax easily!",
+    "version": "1.0.0",
     "icons": [
       {
         "src": "favicon.ico",
