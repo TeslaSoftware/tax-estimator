@@ -13,7 +13,7 @@ var keysForInitialProperties = ['numberOfDependantChildren', 'numberOfDependantR
 
 //keys for valid state properties, that are not used by model
 var keysForExcludedProperties = ['totalIncome', 'AGI', 'totalTaxWithheld', 'totalTaxDue', 'balance', 'graphDataSet', 
-'graphDataSetTaxDue', 'graphDataSetNetIncome', 'currentScreen', 'messageForNonRefundableTaxCredits' ];
+'graphDataSetTaxDue', 'graphDataSetNetIncome', 'currentScreen', 'messageForNonRefundableTaxCredits', 'effectiveTaxRate',  'taxBracket'];
 
 
 
@@ -39,8 +39,11 @@ dependantsTaxCredit.relative = 500;
 class taxModel2019{            
     
     constructor(){
+
         //fixed variables indentifying model
         this.taxYear = 2019;
+        this.startScreenValue = 0;
+        this.endScreenValue = 5;
 
         //basic variables used for calculations
         this.wages = 0;
@@ -132,6 +135,8 @@ class taxModel2019{
     getWages(){ return this.wages; }
 
     getWagesSpouse(){ return this.wagesSpouse; }
+
+    getTaxBracketRate(){ return this.taxBracketRate; }
 
     //this will be in the future interface method
     getTaxYear(){
@@ -261,7 +266,7 @@ class taxModel2019{
         */
        this.effectiveTaxRate = 0;
        if(this.totalIncome !== 0){
-        this.effectiveTaxRate = this.totalTaxDue / this.totalIncome;
+        this.effectiveTaxRate = this.totalTaxDue / this.taxableIncome;
        } 
        logger.log("Effective Tax Rate is : " + this.effectiveTaxRate );
        logger.logGroupEnd();

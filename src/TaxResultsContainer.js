@@ -46,7 +46,22 @@ export default function(props){
             <div className="results-row-label">Your total taxes due: </div>
             <div className="results-row-value">{utils.convertToCurrency(props.totalTaxDue, true)}</div>
           </div>
-
+          {
+            props.taxBracket > 0 ?
+              <div className="results-row">
+                <div className="results-row-label">Your tax bracket is: </div>
+                <div className="results-row-value">{(props.taxBracket * 100).toFixed(0)} % </div>
+              </div>
+            : null
+          }
+          {
+            props.effectiveTaxRate > 0 ?
+              <div className="results-row">
+                <div className="results-row-label">Your effective tax rate is: </div>
+                <div className="results-row-value">{(props.effectiveTaxRate * 100).toFixed(0)} % </div>
+              </div>
+            : null
+          }
           <div className="results-row">
             <div className="results-row-label">Your balance is: </div>
             {

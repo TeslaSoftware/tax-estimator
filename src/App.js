@@ -20,10 +20,10 @@ class App extends React.Component {
 
   constructor(props){
     super(props);
-
+    this.taxModel = new taxModel2019();
     //set constants - in future they can be specified for each tax model year
-    this.startScreenValue = 0;
-    this.endScreenValue = 5;
+    this.startScreenValue = this.taxModel.startScreenValue;
+    this.endScreenValue = this.taxModel.endScreenValue;
 
     this.state = this.getInitialState();
     this.changeFilingStatus = this.changeFilingStatus.bind(this);
@@ -43,8 +43,7 @@ class App extends React.Component {
     //this.changeCurrentScreenValue = this.changeCurrentScreenValue.bind(this);
     this.calculateTaxes = this.calculateTaxes.bind(this);
     
-    //non-state variables and objects    
-    this.taxModel = new taxModel2019();
+    //initialize model
     this.taxModel.initFromState(this.state);
   }
 
@@ -71,6 +70,8 @@ class App extends React.Component {
       totalTaxWithheld: 0,
       totalTaxDue: 0,
       balance: 0,
+      taxBracket: 0,
+      effectiveTaxRate: 0,
       graphDataSetTaxDue: [],
       graphDataSetNetIncome: [],
       currentScreen : this.startScreenValue,      
@@ -212,18 +213,12 @@ class App extends React.Component {
     
 
     return (
-      <div className="App">
+      <div id="App">
         <header className="App-header">
           TAX ESTIMATOR 2020
         </header>
         <main>
           <div id="main-container">
-            {              
-              //TO-DO
-              //Change UI to display step by step one section at a time. Also show progress in squares with numbers- highlight current section number
-              //use state variable to keep track on which screen you are and render only that section.You can add all section to an array and display only current index section.
-              //develop unit tests
-            }
             {
               sectionToDisplay
             }
@@ -361,6 +356,8 @@ class App extends React.Component {
         AGI = {this.state.AGI}
         totalTaxWithheld = {this.state.totalTaxWithheld}
         totalTaxDue = {this.state.totalTaxDue}
+        taxBracket = {this.state.taxBracket}
+        effectiveTaxRate = {this.state.effectiveTaxRate}
         graphDataSetTaxDue = {this.state.graphDataSetTaxDue}
         graphDataSetNetIncome = {this.state.graphDataSetNetIncome}  
         messageForNonRefundableTaxCredits = {this.state.messageForNonRefundableTaxCredits}          
@@ -383,6 +380,8 @@ class App extends React.Component {
           AGI: newTaxModel.taxableIncome,
           totalTaxWithheld: newTaxModel.totalTaxesWithheld,
           totalTaxDue: newTaxModel.totalTaxDue,
+          taxBracket: newTaxModel.taxBracketRate,
+          effectiveTaxRate: newTaxModel.effectiveTaxRate,
           graphDataSetTaxDue: dataForGraphs.datasetTaxDue,
           graphDataSetNetIncome: dataForGraphs.datasetNetIncome,
           messageForNonRefundableTaxCredits: newTaxModel.getMessageForNonRefundableTaxCredits(),
