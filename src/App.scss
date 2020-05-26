@@ -37,9 +37,9 @@ $error-color:#B00020;
 $on-error-color: #FFFFFF;
 
 body{
-  background-color: #e3f2fd;
+  background: radial-gradient( scale-color($primary-color, $lightness: 80%, $saturation: -50%) 10%, scale-color($primary-color, $lightness: 50%)  );
   font-family: 'Montserrat', sans-serif;
-  
+  background: scale-color($primary-color, $lightness: 98%, $saturation: -0%);
 }
 
 .unselectable {
@@ -79,7 +79,7 @@ body{
   color: $on-primary-color;
   font-weight: 500;
   box-shadow: 0px 3px 2px 1px rgba(0, 0, 0, 0.25), 0px 0 6px 0px rgba(0, 0, 0, 0.15);
-  padding: 0.1rem;
+  padding: 0.5rem;
   position: fixed;
   width: 100%;
   z-index: 10;
@@ -89,24 +89,20 @@ body{
 main{
   display: flex;
   justify-content: center;
-  padding-top: 2rem;
-  /*Padding bottom to accomodate footer - no matter the size of the content of main */
+  padding-top: 3rem;
   flex-grow: 1;
 }
 
 #main-container{
   margin: 1rem;
   align-self: center;
-  & > div{
-    margin: 1rem;
-  }
   
 }
 
 .data-entry-section, #results-container{
   margin: 1rem;
   overflow: hidden;
-  border-radius: 0.3rem;
+  //border-radius: 0.3rem;
   box-shadow: 2px 2px 6px 1px rgba(0, 0, 0, 0.2), 0px 0px 6px 3px rgba(0, 0, 0, 0.12);
   background-color: $on-primary-color;
 }
@@ -115,7 +111,9 @@ main{
 .data-entry-section-header{
   background: linear-gradient(to right, $primary-light-color , $primary-color 20%,  $primary-color 80%, $primary-light-color );
   color: $on-primary-color;
-  padding: 0.5rem;
+  padding: 1rem;
+  font-weight: bold;
+  background: $primary-color 20%;
 }
 
 .data-entry-section-content{
@@ -128,9 +126,11 @@ main{
 }
 
 #results-container-header{
-  background: linear-gradient(to right, $secondary-light-color , $secondary-color 20%,  $secondary-color 80%, $secondary-light-color );
+  //background: linear-gradient(to right, $secondary-light-color , $secondary-color 20%,  $secondary-color 80%, $secondary-light-color );
   color: $on-primary-color;
-  padding: 0.5rem;
+  padding: 1rem;
+  font-weight: bold;
+  background: $secondary-color;
 }
 
 #results-container-content{
@@ -327,11 +327,13 @@ button{
   background-color: $secondary-color;
   color: $on-secondary-color;
   font-weight: 700;
-  box-shadow: 2px 2px 2px 0px rgba(56, 112, 2, 0.2), 0px 0px 7px 2px rgba(56, 112, 2, 0.15);
-  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
+  box-shadow: 2px 2px 8px 1px rgba(0, 0, 0, 0.2), 0px 0px 8px 3px rgba(0, 0, 0, 0.12);
+  //text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
   background-position: center;
   transition: 0.8s;
   outline: none;
+  min-width: 8rem;
+  font-weight: 900;
   &:hover {
     background:lighten($color: $secondary-color, $amount: 5%) radial-gradient(circle, transparent 1%,  lighten($color: $secondary-color, $amount: 5%) 1%) center/15000%;
     cursor: pointer;
@@ -372,12 +374,13 @@ button{
 
 
 footer{
-  background-color: $secondary-dark-color;
+  background-color: $primary-color;
   color: $on-secondary-dark-color;
   font-size: 0.65rem;
   //position: absolute;
   bottom: 0;
   width: 100%;
+  padding: 0.5rem 0;
 }
 
 
@@ -398,10 +401,15 @@ footer{
       text-align: center;
     }
   }
+  button{
+    min-width: 6rem;
+  }
 }
+
 
 @media only screen and (max-width: 350px) {
   .App-header{
     font-size: 1.5rem;
   }
+  
 }
