@@ -46,7 +46,10 @@ Open http://localhost:3000 to view it in the browser. All the changes to code wi
 
 ## Running the tests
 
-TO-DO
+In the project directory, enter the following command to run the tests (both UI and unit tests):
+```
+npm test
+```
 
 ## Built With
 
